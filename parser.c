@@ -26,13 +26,13 @@ forth_get_word_from_src(
     // get word.
     word_count = 0;
     while (is_word(interp->src[interp->cur_pos])) {
-        if (interp->src[interp->cur_pos] == '\0') goto ERR_EOF;
+        if (interp->src[interp->cur_pos] == '\0') break;    // this is success
 
         word[word_count] = interp->src[interp->cur_pos];
         word_count++;
         interp->cur_pos++;
 
-        if (interp->cur_pos >= max_size) return true;    // this is success.
+        if (interp->cur_pos >= max_size) break;    // this is success.
     }
     word[word_count] = '\0';
     return true;
@@ -43,5 +43,6 @@ ERR_ARGS:
     return false;
 ERR_EOF:
     interp->errno = FORTH_ERR_EOF;
+    *word = '\0';    // make word empty string.
     return false;
 }
