@@ -40,6 +40,7 @@ main(void)
 
     forth_get_word_from_src(i, word, max_size);
     OK(i->errno == FORTH_ERR_EOF, "no more words");
+    OK(*word == '\0', "no more words");
 
 
     // "foo bar"
@@ -53,6 +54,7 @@ main(void)
 
     forth_get_word_from_src(i, word, max_size);
     OK(i->errno == FORTH_ERR_EOF, "no more words");
+    OK(*word == '\0', "no more words");
 
 
     // "    foo bar"
@@ -66,6 +68,7 @@ main(void)
 
     forth_get_word_from_src(i, word, max_size);
     OK(i->errno == FORTH_ERR_EOF, "no more words");
+    OK(*word == '\0', "no more words");
 
 
     // "    foo bar"
@@ -79,6 +82,7 @@ main(void)
 
     forth_get_word_from_src(i, word, max_size);
     OK(i->errno == FORTH_ERR_EOF, "no more words");
+    OK(*word == '\0', "no more words");
 
     /* set and check - end */
 

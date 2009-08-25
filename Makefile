@@ -1,4 +1,4 @@
-.PHONY: all test depend clean
+.PHONY: all full-test test leak-test depend clean
 
 CC       = gcc
 INCLUDES =
@@ -11,6 +11,7 @@ OBJS     = $(SRC:.c=.o)
 
 OBJS_NOMAIN = `for i in $(OBJS); do echo $$i; done | grep -v 'main\.'`
 TEST        = stack-test parser-test
+TEST_DIR    = t
 
 
 
@@ -24,9 +25,19 @@ $(EXE): $(OBJS)
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
+
+# full-test
+full-test: test leak-test
+
 # test
-test: $(OBJS)
-	(for i in $(TEST); do $(CC) $(CFLAGS) t/$$i.c -o t/$$i $(OBJS_NOMAIN); echo "test '$$i' begin."; t/$$i || exit -1; echo "test '$$i' end."; done) && echo "＼(＾o＾)／: all test was successful."
+test: $(EXE)
+	(for i in $(TEST); do $(CC) $(CFLAGS) $(TEST_DIR)/$$i.c -o $(TEST_DIR)/$$i $(OBJS_NOMAIN); echo "test '$$i' begin."; $(TEST_DIR)/$$i || exit -1; echo "test '$$i' end."; done) && echo "＼(＾o＾)／: all test was successful."
+
+# leak-test
+leak-test:
+	sleep 1
+	valgrind --leak-check=full ./$(EXE)
+	for i in $(TEST); do valgrind --leak-check=full $(TEST_DIR)/$$i; done
 
 # depend
 depend:
