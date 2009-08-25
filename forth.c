@@ -10,12 +10,12 @@
 
 // data
 #include "preproc.h"
-#include "type.h"
 // api
-#include "util.h"
-#include "stack.h"
 #include "word.h"
 #include "parser.h"
+
+#include "util.h"
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,25 +33,43 @@ forth_init(ForthInterp *interp)
 {
     /* don't use forth_malloc() in this func. */
 
-    interp->src = REINTERP_CAST(char*, malloc(SRC_MAX_BYTE));
-    memset(interp->src, 0, SRC_MAX_BYTE);
+    /* initialize source code storage */
+    interp->src = REINTERP_CAST(char*, malloc(SRC_DFL_BYTE));
+    memset(interp->src, 0, SRC_DFL_BYTE);
 
-    interp->max_src_len  = SRC_MAX_BYTE;
-    interp->max_line_len = SRC_MAX_LINEBYTE;
-    interp->max_word_len = SRC_MAX_WORDBYTE;
+
+    /* initialize constant and counter */
+    interp->max_src_len  = SRC_DFL_BYTE;
+    interp->max_line_len = SRC_DFL_LINEBYTE;
+    interp->max_word_len = SRC_DFL_WORDBYTE;
     interp->src_len = 0;
     interp->cur_pos = 0;
-
     interp->errno = 0;
 
-    // initialize forth operators.
+
+    /* initialize forth operators */
     interp->words = REINTERP_CAST(
-        ForthWord*, calloc(sizeof(ForthWord), 1)
+        ForthWord*, calloc(sizeof(ForthWord), 4)
     );
+    interp->word_pos = 0;
+
+    forth_regist_word(interp, "+", forth_word_plus);
+    forth_regist_word(interp, "-", forth_word_minus);
+    forth_regist_word(interp, "*", forth_word_multiply);
+    forth_regist_word(interp, "/", forth_word_divide);
+
+
     // TODO
-    // interp->words[] = {
-    //     {"@", forth_word_assign}
-    // };
+    // stack_init(interp->stack, STACK_DFL_NUM, sizeof(char*));
+}
+
+
+void
+forth_regist_word(ForthInterp *interp, char *name, forth_word_t func)
+{
+    interp->words[interp->word_pos].name = name;
+    interp->words[interp->word_pos].func = func;
+    interp->word_pos++;
 }
 
 

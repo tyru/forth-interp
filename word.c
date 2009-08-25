@@ -9,6 +9,24 @@
 #include "word.h"
 
 void
-forth_word_assign(ForthInterp *interp)
+forth_word_plus(ForthInterp *interp)
+{
+}
+
+
+void
+forth_word_minus(ForthInterp *interp)
+{
+}
+
+
+void
+forth_word_multiply(ForthInterp *interp)
+{
+}
+
+
+void
+forth_word_divide(ForthInterp *interp)
 {
 }

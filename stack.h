@@ -24,6 +24,9 @@ struct ForthStack {
 };
 
 
+
+
+
 stack_ret
 stack_init(ForthStack *stack, size_t size, size_t elem_size);
 

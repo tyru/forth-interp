@@ -3,7 +3,6 @@
 
 #include "type.h"
 
-// #include "stack.h"
 #include "word.h"
 
 #include <stdio.h>
@@ -21,7 +20,7 @@ typedef struct ForthVar ForthVar;
 
 
 // set these error id by forth api.
-enum forth_err_id  {
+enum forth_err_id {
     FORTH_ERR_ARGS = 1,
     FORTH_ERR_EOF,
     FORTH_ERR_ALLOC,
@@ -44,17 +43,24 @@ struct ForthInterp {
                                 //(default is SRC_MAX_WORDBYTE)
 
     ForthStack *stack;          // stack
+
     ForthWord  *words;          // forth's word(functions?)
+    uint       word_pos;
+
     ForthVar   *vars;
 
     int        errno;           // error id set by api
 };
 
 
-/* api */
+
+
 
 void
 forth_init(ForthInterp *interp);
+
+void
+forth_regist_word(ForthInterp *interp, char *name, forth_word_t func);
 
 void
 forth_destruct(ForthInterp *interp);
