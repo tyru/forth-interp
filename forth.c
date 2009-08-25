@@ -2,14 +2,13 @@
  * forth.c - api of forth
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-25.
+ * Last Change: 2009-08-26.
  *
  */
 
 #include "forth.h"
 
 // data
-#include "struct.h"
 #include "preproc.h"
 #include "type.h"
 // api

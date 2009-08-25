@@ -2,9 +2,10 @@
  * util.c - functions which does NOT take 'ForthInterp' as arg 1
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-25.
+ * Last Change: 2009-08-26.
  *
  */
+
 #include "util.h"
 
 #include "preproc.h"

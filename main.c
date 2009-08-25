@@ -2,13 +2,11 @@
  * main.c - main
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-25.
+ * Last Change: 2009-08-26.
  *
  */
 
 #include "forth.h"
-// for ForthInterp. (in fact, forth.h includes this header though)
-#include "struct.h"
 
 #include <stdio.h>
 #include <stdlib.h>

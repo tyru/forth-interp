@@ -1,8 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-
-#include "struct.h"
+#include "type.h"
 
 #include <stdio.h>
 #include <stdbool.h>

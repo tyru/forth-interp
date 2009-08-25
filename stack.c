@@ -1,3 +1,11 @@
+/*
+ * stack.c - stack implementation using heap (slow)
+ *
+ * Written By: tyru <tyru.exe@gmail.com>
+ * Last Change: 2009-08-26.
+ *
+ */
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -76,7 +84,7 @@ stack_pop(ForthStack *stack)
 // }
 
 
-// NOTE: it's ok to destruct interp more than twice.
+// NOTE: it's ok to destruct stack more than twice.
 stack_ret
 stack_destruct(ForthStack *stack)
 {

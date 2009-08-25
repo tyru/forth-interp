@@ -2,10 +2,21 @@
 #define WORD_H
 
 
-typedef void (*forth_word_func)(void);
+#include "type.h"
 
 
-// TODO 関数宣言
+typedef void (*forth_word_func)(ForthInterp *interp);
+
+// forth operators
+struct ForthWord {
+    char            *name;
+    forth_word_func func;
+};
+
+
+
+void
+forth_word_assign(ForthInterp *interp);
 
 
 #endif /* WORD_H */

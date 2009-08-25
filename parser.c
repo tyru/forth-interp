@@ -1,6 +1,15 @@
+/*
+ * parser.c - parser
+ *
+ * Written By: tyru <tyru.exe@gmail.com>
+ * Last Change: 2009-08-26.
+ *
+ */
+
 #include "parser.h"
 
-#include "util.h"
+#include "util.h"    // for is_word()
+#include "forth.h"    // accessing to interp, must know full structure of ForthInterp.
 
 #include <stdio.h>
 

@@ -1,15 +1,57 @@
 #ifndef FORTH_H
 #define FORTH_H
 
-#include "struct.h"
+#include "type.h"
+
+// #include "stack.h"
+#include "word.h"
 
 #include <stdio.h>
 #include <stdbool.h>
 
 
 
-/* api */
 
+// forth's variables
+struct ForthVar {
+    char    *name;
+    value_t value;
+};
+typedef struct ForthVar ForthVar;
+
+
+// set these error id by forth api.
+enum forth_err_id  {
+    FORTH_ERR_ARGS = 1,
+    FORTH_ERR_EOF,
+    FORTH_ERR_ALLOC,
+    FORTH_ERR_OVERFLOW,
+};
+typedef enum forth_err_id forth_err_id;
+
+
+
+// interpreter
+struct ForthInterp {
+    char       *src;            // source src
+    uint       max_src_len;     // allocated length of src. (default is SRC_MAX_BYTE)
+    uint       src_len;         // source src string length
+    uint       cur_pos;         // current reading position
+
+    uint       max_line_len;    // allocated number of bytes each line
+                                // (default is SRC_MAX_LINEBYTE)
+    uint       max_word_len;    // allocated number of bytes each word
+                                //(default is SRC_MAX_WORDBYTE)
+
+    ForthStack *stack;          // stack
+    ForthWord  *words;          // forth's word(functions?)
+    ForthVar   *vars;
+
+    int        errno;           // error id set by api
+};
+
+
+/* api */
 
 void
 forth_init(ForthInterp *interp);

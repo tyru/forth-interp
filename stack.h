@@ -1,16 +1,27 @@
 #ifndef STACK_H
 #define STACK_H
 
-#include "struct.h"
+#include "type.h"
 
 
-typedef enum stack_ret_t {
+// this is used by only this file and stack.c
+enum stack_ret {
     STACK_SUCCESS = 1,
     STACK_ARG_ERROR,      // some arguments are wrong.
     STACK_RANGE_ERROR,    // can't push or pop no more.
     STACK_ALLOC_ERROR,    // can't allocate memory.
-} stack_ret;
+};
+// this enum is used by only stack.h and stack.c
+typedef enum stack_ret stack_ret;
 
+
+struct ForthStack {
+    void **stack;     // stack
+    void *top;        // top of element
+    int cur_pos;      // current position of stacks
+    int max_len;      // max length of stacks
+    int elem_size;    // size of one element
+};
 
 
 stack_ret
