@@ -51,7 +51,9 @@ d_print(const char* msg)
 bool
 is_word(int c)
 {
-    return ! isspace(c);
+    return
+        ! isspace(c)
+        ;
 }
 
 

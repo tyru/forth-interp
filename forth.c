@@ -8,10 +8,15 @@
 
 #include "forth.h"
 
+// data
 #include "struct.h"
 #include "preproc.h"
+#include "type.h"
+// api
 #include "util.h"
 #include "stack.h"
+#include "word.h"
+#include "parser.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,25 +32,48 @@
 void
 forth_init(ForthInterp *interp)
 {
-    interp->code = REINTERP_CAST(char *, malloc(SOURCE_MAX_STRLEN));
-    memset(interp->code, 0, SOURCE_MAX_STRLEN);
+    /* don't use forth_malloc() in this func. */
 
-    interp->code_read_pos = 0;
+    interp->src = REINTERP_CAST(char*, malloc(SRC_MAX_BYTE));
+    memset(interp->src, 0, SRC_MAX_BYTE);
+
+    interp->max_src_len = SRC_MAX_BYTE;
+    interp->src_len = 0;
+    interp->cur_pos = 0;
+
+    interp->errno = 0;
+
+    // initialize forth operators.
+    interp->words = REINTERP_CAST(
+        ForthWord*, calloc(sizeof(ForthWord), 1)
+    );
+    // TODO
+    // interp->words[] = {
+    //     {"@", forth_word_assign}
+    // };
 }
 
 
+// NOTE: it's ok to destruct interp more than twice.
 void
 forth_destruct(ForthInterp *interp)
 {
-    free(interp->code);
+    if (interp->src != NULL) {
+        free(interp->src);
+        interp->src = NULL;
+    }
+    if (interp->words != NULL) {
+        free(interp->words);
+        interp->words = NULL;
+    }
 }
 
 
 void
-forth_parse_args(int *argc, char **argv)
+forth_getopt(ForthInterp *interp, int *argc, char **argv)
 {
     static struct option long_opts[] = {
-        {"help", 0, 0, 'h'}
+        {"help", 0, NULL, 'h'}
     };
     int opt_index = 0;
     int c;
@@ -54,11 +82,11 @@ forth_parse_args(int *argc, char **argv)
         switch (c) {
             case 'h':
                 puts("May the forth be with you.");
-                exit(EXIT_SUCCESS);
+                forth_exit(interp, EXIT_SUCCESS);
+                /* NOTREACHED */
 
             case '?':
-                perror("getopt_long");
-                break;
+                forth_die(interp, "getopt_long", EXIT_FAILURE);
         }
     }
 }
@@ -67,49 +95,124 @@ forth_parse_args(int *argc, char **argv)
 void
 forth_repl(ForthInterp *interp)
 {
-    char linebuf[SOURCE_MAX_LINEBYTE];
+    char linebuf[SRC_MAX_LINEBYTE];    // c99
 
     while (1) {
         printf(REPL_PROMPT_STR);
 
         // clear buffer each line.
-        memset(linebuf, 0, SOURCE_MAX_LINEBYTE);
-        if (fgets(linebuf, SOURCE_MAX_LINEBYTE, stdin) == NULL)
+        memset(linebuf, 0, SRC_MAX_LINEBYTE);
+        if (fgets(linebuf, SRC_MAX_LINEBYTE, stdin) == NULL)
             break;
 
         // set linebuf as source code.
-        strncpy(interp->code, linebuf, SOURCE_MAX_STRLEN);
+        forth_set_src(interp, linebuf);
         // execute.
-        forth_exec_code(interp);
+        forth_exec_src(interp);
     }
-}
-
-
-// NOTE: not used.
-char*
-forth_fgets(ForthInterp *interp, FILE *in)
-{
-    char linebuf[SOURCE_MAX_LINEBYTE];
-    // get line and concat if not null.
-    char *ret = fgets(linebuf, SOURCE_MAX_LINEBYTE, in);
-    if (ret != NULL) {
-        strncat(interp->code, linebuf, SOURCE_MAX_STRLEN);
-    }
-    // advance code_len.
-    interp->code_len += strlen(linebuf);
-
-    return ret;
 }
 
 
 void
-forth_exec_code(ForthInterp *interp)
+forth_set_src(ForthInterp *interp, char *src)
 {
-    d_printf("debug: [%s]\n", interp->code);
+    if (strlen(src) >= interp->max_src_len) {
+        interp->errno = FORTH_ERR_OVERFLOW;
+        forth_die(interp, "forth_set_src", EXIT_FAILURE);
+    }
+
+    // clear previous string.
+    forth_clear_src(interp);
+    // copy string.
+    strncpy(interp->src, src, interp->max_src_len);
+    // set string length.
+    interp->src_len = strlen(src);
+    // init current reading position.
+    interp->cur_pos = 0;
 }
 
-bool
-forth_code_eof(ForthInterp *interp)
+
+void
+forth_clear_src(ForthInterp *interp)
 {
-    return interp->code_read_pos > strlen(interp->code);
+    memset(interp->src, 0, interp->max_src_len);
+    interp->src_len = 0;
 }
+
+
+void
+forth_exec_src(ForthInterp *interp)
+{
+    char word[SRC_MAX_WORDBYTE];    // c99
+    memset(word, 0, SRC_MAX_WORDBYTE);
+
+    d_printf("debug: [%s]\n", interp->src);
+
+    bool success = forth_get_word_from_src(interp, word, SRC_MAX_WORDBYTE);
+    if (! success) {
+        forth_die(interp, "forth_get_word_from_src", EXIT_FAILURE);
+    }
+    d_printf("debug: read [%s].\n", word);
+}
+
+
+void*
+forth_malloc(ForthInterp *interp, size_t size)
+{
+    void *ptr = malloc(size);
+    if (ptr == NULL) {
+        interp->errno = FORTH_ERR_ALLOC;
+        forth_die(interp, "malloc", EXIT_FAILURE);
+    }
+    return ptr;
+}
+
+
+void
+forth_die(ForthInterp *interp, const char *msg, int status)
+{
+    forth_perror(interp, msg);
+    forth_exit(interp, status);
+}
+
+
+void
+forth_perror(ForthInterp *interp, const char *msg)
+{
+    fputs(msg, stderr);
+    switch (interp->errno) {
+        case FORTH_ERR_ARGS:
+            fputs("arguments error", stderr);
+            break;
+        case FORTH_ERR_EOF:
+            fputs("EOF error", stderr);
+            break;
+        case FORTH_ERR_ALLOC:
+            fputs("can't allocate memory.", stderr);
+            break;
+        case FORTH_ERR_OVERFLOW:
+            fputs("overflow error", stderr);
+            break;
+
+        default:
+            fputs("No error found but forth_perror() was called.", stderr);
+            break;
+    }
+}
+
+
+void
+forth_exit(ForthInterp *interp, int status)
+{
+    forth_destruct(interp);
+    exit(status);
+}
+
+
+bool
+forth_src_eof(ForthInterp *interp)
+{
+    return interp->cur_pos > interp->src_len;
+}
+
+

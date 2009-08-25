@@ -3,9 +3,12 @@
 
 
 #include "type.h"
+#include "word.h"
 
 
 /* struct */
+
+// stack
 typedef struct ForthStack_ {
     void **stack;     // stack
     void *top;        // top of element
@@ -15,12 +18,42 @@ typedef struct ForthStack_ {
 } ForthStack;
 
 
+// forth operators
+typedef struct ForthWord_ {
+    char            *name;
+    forth_word_func func;
+} ForthWord;
+
+
+// variables
+typedef struct ForthVar_ {
+    char    *name;
+    value_t value;
+} ForthVar;
+
+
+// interpreter
 typedef struct ForthInterp_ {
-    char *code;              // source code
-    int   code_len;          // source code string length
-    uint   code_read_pos;    // read
-    ForthStack stack;        // stack
+    char       *src;            // source src
+    uint       max_src_len;     // allocated length of src.
+    uint       src_len;         // source src string length
+    uint       cur_pos;         // current reading position
+
+    ForthStack stack;           // stack
+    ForthWord  *words;          // forth's word(functions?)
+    ForthVar   *vars;
+
+    int        errno;           // error id set by api
 } ForthInterp;
+
+
+// set these error id by forth api.
+typedef enum forth_err_id_  {
+    FORTH_ERR_ARGS = 1,
+    FORTH_ERR_EOF,
+    FORTH_ERR_ALLOC,
+    FORTH_ERR_OVERFLOW,
+} forth_err_id;
 
 
 

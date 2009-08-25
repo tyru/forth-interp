@@ -10,9 +10,9 @@ void ok(int cond, char* msg)
 {
     static int count;
     if (cond)
-        printf("%d: %s: ok.\n", count, msg);
+        printf("%d: %s: *ok*\n", count, msg);
     else {
-        printf("%d: %s: not ok.\n", count, msg);
+        printf("%d: %s: *NOT ok*\n", count, msg);
         exit(EXIT_FAILURE);
     }
     count++;

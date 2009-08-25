@@ -7,14 +7,20 @@
 #include "../stack.h"
 
 
+static ForthStack stack;
+
+void
+destruct(void)
+{
+    stack_destruct(&stack);
+}
+
 
 int main(void)
 {
-    ForthStack stack;
     int tmp = 0;
 
-    puts(__FILE__ ": test begin.");
-
+    atexit(destruct);
 
 
     ok(stack_init(&stack, 10, sizeof(int)) == STACK_SUCCESS, "stack_init");
@@ -50,8 +56,6 @@ int main(void)
 
     ok(stack_destruct(&stack) == STACK_SUCCESS, "stack_destruct");
 
-
-    puts(__FILE__ ": test end.");
 
     return EXIT_SUCCESS;
 }

@@ -4,6 +4,7 @@
 
 
 typedef unsigned int uint;
+typedef int value_t;
 
 
 

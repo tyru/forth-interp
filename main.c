@@ -1,5 +1,5 @@
 /*
- * main.c - 
+ * main.c - main
  *
  * Written By: tyru <tyru.exe@gmail.com>
  * Last Change: 2009-08-25.
@@ -16,14 +16,15 @@
 
 
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     ForthInterp interp;
 
     // construct.
     forth_init(&interp);
     // parsing arguments.
-    forth_parse_args(&argc, argv);
+    forth_getopt(&interp, &argc, argv);
     // read and execute each line.
     forth_repl(&interp);
     // destruct.

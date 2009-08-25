@@ -1,13 +1,16 @@
 .PHONY: all test depend clean
 
 CC       = gcc
-INCLUDES = -g
-CFLAGS   = $(INCLUDES) -Wall -W -pedantic -std=c99
-LIBS     = 
+INCLUDES =
+CFLAGS   = $(INCLUDES) -g -Wall -W -pedantic -std=c99
+LIBS     =
 
 EXE      = myforth
-SRC      = main.c forth.c util.c stack.c
+SRC      = main.c forth.c util.c stack.c parser.c word.c
 OBJS     = $(SRC:.c=.o)
+
+OBJS_NOMAIN = `for i in $(OBJS); do echo $$i; done | grep -v 'main\.'`
+TEST        = stack-test word-test
 
 
 
@@ -23,9 +26,7 @@ $(EXE): $(OBJS)
 
 # test
 test: $(OBJS)
-	# stack test
-	cd t && gcc -g stack-test.c -o stack-test ../stack.o
-	t/stack-test
+	for i in $(TEST); do $(CC) $(CFLAGS) t/$$i.c -o t/$$i $(OBJS_NOMAIN); echo "test '$$i' begin."; t/$$i; echo "test '$$i' end."; done
 
 # depend
 depend:

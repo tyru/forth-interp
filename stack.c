@@ -76,14 +76,19 @@ stack_pop(ForthStack *stack)
 // }
 
 
+// NOTE: it's ok to destruct interp more than twice.
 stack_ret
 stack_destruct(ForthStack *stack)
 {
+    if (stack == NULL) return STACK_ARG_ERROR;
+    if (stack->stack == NULL) return STACK_ARG_ERROR;
+
     while (stack->cur_pos > 0) {
         stack_ret ret = stack_pop(stack);
         if (ret != STACK_SUCCESS) return ret;
     }
     free(stack->stack);
+    stack->stack = NULL;
 
     return STACK_SUCCESS;
 }
