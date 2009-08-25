@@ -11,7 +11,7 @@
 
 /* constant */
 
-// max length
+// default value of max length
 #define SRC_MAX_BYTE         (100 * 1024)
 #define SRC_MAX_LINEBYTE     (1024)
 #define SRC_MAX_WORDBYTE     (1024)

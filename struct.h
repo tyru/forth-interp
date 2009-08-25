@@ -35,9 +35,14 @@ typedef struct ForthVar_ {
 // interpreter
 typedef struct ForthInterp_ {
     char       *src;            // source src
-    uint       max_src_len;     // allocated length of src.
+    uint       max_src_len;     // allocated length of src. (default is SRC_MAX_BYTE)
     uint       src_len;         // source src string length
     uint       cur_pos;         // current reading position
+
+    uint       max_line_len;    // allocated number of bytes each line
+                                // (default is SRC_MAX_LINEBYTE)
+    uint       max_word_len;    // allocated number of bytes each word
+                                //(default is SRC_MAX_WORDBYTE)
 
     ForthStack stack;           // stack
     ForthWord  *words;          // forth's word(functions?)

@@ -37,7 +37,9 @@ forth_init(ForthInterp *interp)
     interp->src = REINTERP_CAST(char*, malloc(SRC_MAX_BYTE));
     memset(interp->src, 0, SRC_MAX_BYTE);
 
-    interp->max_src_len = SRC_MAX_BYTE;
+    interp->max_src_len  = SRC_MAX_BYTE;
+    interp->max_line_len = SRC_MAX_LINEBYTE;
+    interp->max_word_len = SRC_MAX_WORDBYTE;
     interp->src_len = 0;
     interp->cur_pos = 0;
 
@@ -95,14 +97,14 @@ forth_getopt(ForthInterp *interp, int *argc, char **argv)
 void
 forth_repl(ForthInterp *interp)
 {
-    char linebuf[SRC_MAX_LINEBYTE];    // c99
+    char linebuf[interp->max_line_len];    // c99
 
     while (1) {
         printf(REPL_PROMPT_STR);
 
         // clear buffer each line.
-        memset(linebuf, 0, SRC_MAX_LINEBYTE);
-        if (fgets(linebuf, SRC_MAX_LINEBYTE, stdin) == NULL)
+        memset(linebuf, 0, interp->max_line_len);
+        if (fgets(linebuf, interp->max_line_len, stdin) == NULL)
             break;
 
         // set linebuf as source code.
@@ -143,12 +145,12 @@ forth_clear_src(ForthInterp *interp)
 void
 forth_exec_src(ForthInterp *interp)
 {
-    char word[SRC_MAX_WORDBYTE];    // c99
-    memset(word, 0, SRC_MAX_WORDBYTE);
+    char word[interp->max_word_len];    // c99
+    memset(word, 0, interp->max_word_len);
 
     d_printf("debug: [%s]\n", interp->src);
 
-    bool success = forth_get_word_from_src(interp, word, SRC_MAX_WORDBYTE);
+    bool success = forth_get_word_from_src(interp, word, interp->max_word_len);
     if (! success) {
         forth_die(interp, "forth_get_word_from_src", EXIT_FAILURE);
     }
