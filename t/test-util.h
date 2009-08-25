@@ -5,14 +5,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define OK(cond, msg) \
+    ok(cond, msg, __FILE__, __LINE__)
 
-void ok(int cond, char* msg)
+void ok(int cond, const char* msg, const char *file, const int line)
 {
     static int count;
     if (cond)
         printf("%d: %s: *ok*\n", count, msg);
     else {
         printf("%d: %s: *NOT ok*\n", count, msg);
+        fprintf(stderr, "died: file %s, line %d\n", file, line);
         exit(EXIT_FAILURE);
     }
     count++;

@@ -10,7 +10,7 @@ SRC      = main.c forth.c util.c stack.c parser.c word.c
 OBJS     = $(SRC:.c=.o)
 
 OBJS_NOMAIN = `for i in $(OBJS); do echo $$i; done | grep -v 'main\.'`
-TEST        = stack-test word-test
+TEST        = stack-test parser-test
 
 
 
@@ -26,7 +26,7 @@ $(EXE): $(OBJS)
 
 # test
 test: $(OBJS)
-	for i in $(TEST); do $(CC) $(CFLAGS) t/$$i.c -o t/$$i $(OBJS_NOMAIN); echo "test '$$i' begin."; t/$$i; echo "test '$$i' end."; done
+	(for i in $(TEST); do $(CC) $(CFLAGS) t/$$i.c -o t/$$i $(OBJS_NOMAIN); echo "test '$$i' begin."; t/$$i || exit -1; echo "test '$$i' end."; done) && echo "＼(＾o＾)／: all test was successful."
 
 # depend
 depend:
