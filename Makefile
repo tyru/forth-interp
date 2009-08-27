@@ -1,16 +1,18 @@
 .PHONY: all full-test test leak-test depend clean
 
+NDEBUG   = -DNDEBUG=1
+
 CC       = gcc
 INCLUDES =
-CFLAGS   = $(INCLUDES) -g -Wall -W -pedantic -std=c99
+CFLAGS   = $(NDEBUG) $(INCLUDES) -g -Wall -W -pedantic -std=c99
 LIBS     =
 
 EXE      = myforth
 SRC      = main.c forth.c util.c stack.c parser.c word.c
 OBJS     = $(SRC:.c=.o)
 
-OBJS_NOMAIN = `for i in $(OBJS); do echo $$i; done | grep -v 'main\.'`
-TEST        = stack-test parser-test
+OBJS_NOMAIN = `for i in $(OBJS); do echo $$i; done | grep -v 'main\.o'`
+TEST        = stack-test parser-test util-test
 TEST_DIR    = t
 
 

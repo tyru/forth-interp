@@ -2,7 +2,7 @@
  * parser.c - parser
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-26.
+ * Last Change: 2009-08-27.
  *
  */
 
@@ -44,6 +44,8 @@ forth_get_word_from_src(
         if (interp->cur_pos >= max_size) break;    // this is success.
     }
     word[word_count] = '\0';
+
+    interp->errno = FORTH_ERR_NOERR;
     return true;
 
     // set interp->errno.

@@ -5,10 +5,6 @@
 #include <string.h>    // for STREQ
 
 
-/* define */
-#define NDEBUG 1
-
-
 /* constant */
 
 // default value of max length

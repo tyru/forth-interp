@@ -21,7 +21,8 @@ typedef struct ForthVar ForthVar;
 
 // set these error id by forth api.
 enum forth_err_id {
-    FORTH_ERR_ARGS = 1,
+    FORTH_ERR_NOERR = 0,
+    FORTH_ERR_ARGS,
     FORTH_ERR_EOF,
     FORTH_ERR_ALLOC,
     FORTH_ERR_OVERFLOW,

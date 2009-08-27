@@ -2,7 +2,7 @@
  * util.c - functions which does NOT take 'ForthInterp' as arg 1
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-26.
+ * Last Change: 2009-08-27.
  *
  */
 
@@ -15,6 +15,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <string.h>
 
 
 
@@ -55,6 +56,45 @@ is_word(int c)
     return
         ! isspace(c)
         ;
+}
+
+
+// count c in s.
+size_t
+strcount(const char *s, int c)
+{
+    char *found;
+    size_t count = 0;
+    while ((found = strchr(s, c)) != NULL) {
+        count++;
+        if (*(found + 1) == '\0') return count;
+        s = found + 1;
+    }
+    return count;
+}
+
+
+// from http://d.hatena.ne.jp/p95095yy/20070205/1170688704
+char*
+strtok_r(char *str, const char *delim, char **saveptr)
+{
+    size_t width;
+    char   *head;
+
+    head = (NULL != str) ? str : *saveptr;
+    width = strcspn(head, delim);
+    if (0 == width) {
+        head += strspn(head, delim);
+        width = strcspn(head, delim);
+    }
+    if ('\0' == *head) {
+        return NULL;
+    }
+
+    *saveptr = head + width + strspn(head + width, delim);
+    *(head + width) = '\0';
+
+    return head;
 }
 
 

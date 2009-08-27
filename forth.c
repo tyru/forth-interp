@@ -2,7 +2,7 @@
  * forth.c - api of forth
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-26.
+ * Last Change: 2009-08-27.
  *
  */
 
@@ -25,6 +25,8 @@
 #define _GNU_SOURCE
 #include <getopt.h>
 
+#include <alloca.h>
+
 
 /* api */
 
@@ -44,7 +46,7 @@ forth_init(ForthInterp *interp)
     interp->max_word_len = SRC_DFL_WORDBYTE;
     interp->src_len = 0;
     interp->cur_pos = 0;
-    interp->errno = 0;
+    interp->errno = FORTH_ERR_NOERR;
 
 
     /* initialize forth operators */
@@ -162,16 +164,52 @@ forth_clear_src(ForthInterp *interp)
 void
 forth_exec_src(ForthInterp *interp)
 {
+    int i;
+    // copy original source code.
+    char orig_src[interp->src_len + 1];
+    strncpy(orig_src, interp->src, interp->src_len + 1);
+    // word
     char word[interp->max_word_len];    // c99
     memset(word, 0, interp->max_word_len);
+    // line
+    char **lines;
 
-    d_printf("debug: [%s]\n", interp->src);
-
-    bool success = forth_get_word_from_src(interp, word, interp->max_word_len);
-    if (! success) {
-        forth_die(interp, "forth_get_word_from_src", EXIT_FAILURE);
+    size_t line_num = strcount(orig_src, '\n') + 1;
+    // allocate char** pointers.
+    lines = alloca(line_num * sizeof(char*));
+    // allocate char* strings (interp->max_line_len bytes per line).
+    for (i = 0; (size_t)i < line_num; i++) {
+        lines[line_num] = alloca(interp->max_line_len);
+        memset(lines[line_num], 0, interp->max_line_len);
     }
-    d_printf("debug: read [%s].\n", word);
+
+    // split each line into lines.
+    i = 0;
+    char *saveptr;
+    lines[i++] = strtok_r(orig_src, "\n", &saveptr);    // this destroys orig_src.
+    while ((lines[i++] = strtok_r(NULL, "\n", &saveptr)) != NULL)
+        ;
+
+    // process each line.
+    for (i = 0; lines[i] != NULL; i++) {
+        // set source which doesn't contain newline.
+        size_t len = strlen(lines[i]);
+        strncpy(interp->src, lines[i], len + 1);
+        d_printf("[%s] - eval begin.\n", interp->src);
+
+        while (1) {
+            // get a word.
+            bool success = forth_get_word_from_src(interp, word, interp->max_word_len);
+            if (interp->errno == FORTH_ERR_EOF)    // eof
+                break;
+            if (! success)    // other error
+                forth_die(interp, "forth_get_word_from_src", EXIT_FAILURE);
+
+            d_printf("debug: read [%s].\n", word);
+            // TODO eval
+        }
+        d_printf("[%s] - eval end.\n", interp->src);
+    }
 }
 
 
