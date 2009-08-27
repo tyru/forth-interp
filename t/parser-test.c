@@ -71,7 +71,7 @@ main(void)
     OK(*word == '\0', "no more words");
 
 
-    // "    foo bar"
+    // " \t\n\ffoo\nbar"
     forth_set_src(i, " \t\n\ffoo\nbar");
 
     forth_get_word_from_src(i, word, max_size);

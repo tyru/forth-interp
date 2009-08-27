@@ -3,7 +3,6 @@
 
 #include "test-util.h"
 
-#include "../struct.h"
 #include "../stack.h"
 
 
