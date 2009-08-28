@@ -2,14 +2,14 @@
  * util.c - functions which does NOT take 'ForthInterp' as arg 1
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-27.
+ * Last Change: 2009-08-28.
  *
  */
 
 #include "util.h"
 
-#include "preproc.h"
-
+#include "word.h"
+#include "token.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -41,21 +41,12 @@ int
 d_print(const char* msg)
 {
 #if NDEBUG
-    for (; *msg != '\0'; msg++) fputc(*msg, stdout);
+    fputs(msg, stdout);
     return 1;
 #else
     UNUSED_ARG(msg);
     return 1;
 #endif
-}
-
-
-bool
-is_word(int c)
-{
-    return
-        ! isspace(c)
-        ;
 }
 
 
@@ -98,3 +89,32 @@ strtok_r(char *str, const char *delim, char **saveptr)
 }
 
 
+// token_type -> word_type
+word_type
+token_type2word_type(token_type type)
+{
+    return (word_type)type;
+}
+
+
+// word_type -> token_type
+token_type
+word_type2token_id(word_type type)
+{
+    return (token_type)type;
+}
+
+
+// true: success
+// false: can't allocate memory for word
+bool
+token_to_word_copy(ForthWord *word, ForthToken *token)
+{
+    word->name = CAST(char*, malloc(strlen(token->name) + 1));
+    if (word->name == NULL) return false;
+
+    word->type = token_type2word_type(token->type);
+    word->func = CAST(word_func_t, 0);
+
+    return true;
+}

@@ -12,11 +12,7 @@
 // on failure, return false.
 // (in case of that, use forth_{die,perror,exit}())
 bool
-forth_get_word_from_src(
-    ForthInterp *interp,
-    char *word,
-    size_t max_size
-);
+forth_get_token_from_src(ForthInterp *interp, ForthToken *token, size_t max_size);
 
 
 

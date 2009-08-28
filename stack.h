@@ -3,6 +3,9 @@
 
 #include "type.h"
 
+#include <stdlib.h>
+
+
 
 // this is used by only this file and stack.c
 enum stack_ret {
@@ -35,6 +38,10 @@ stack_push(ForthStack *stack, void *val);
 
 stack_ret
 stack_pop(ForthStack *stack);
+
+// NOTE: this does NOT free() members under its struct.
+stack_ret
+stack_clear(ForthStack *stack);
 
 // stack_ret
 // stack_copy(ForthStack *dest, ForthStack *src);

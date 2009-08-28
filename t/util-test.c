@@ -4,7 +4,7 @@
 #include "test-util.h"
 
 #include "../util.h"
-#include "../preproc.h"
+#include "../util.h"
 
 
 

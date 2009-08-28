@@ -2,7 +2,7 @@
  * stack.c - stack implementation using heap (slow)
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-26.
+ * Last Change: 2009-08-28.
  *
  */
 
@@ -14,14 +14,15 @@
 // when including top of this file.
 #include "stack.h"
 
-#include "preproc.h"
+#include "util.h"
 
 
 
 stack_ret
 stack_init(ForthStack *stack, size_t size, size_t elem_size)
 {
-    stack->stack = REINTERP_CAST(void**, calloc(sizeof(void*), size));
+    // stack->stack = calloc(sizeof(void*), size);
+    stack->stack = CAST(void**, malloc(sizeof(void*) * size));
     if (stack->stack == NULL) return STACK_ALLOC_ERROR;
 
     stack->top = NULL;
@@ -62,16 +63,32 @@ stack_ret
 stack_pop(ForthStack *stack)
 {
     if (stack == NULL) return STACK_ARG_ERROR;
-    if (stack->top == NULL || stack->cur_pos < 0) return STACK_RANGE_ERROR;
+    if (stack->top == NULL) return STACK_RANGE_ERROR;
+    if (stack->cur_pos < 0) return STACK_RANGE_ERROR;
 
-    if (stack->cur_pos == 0) {
-        free(stack->top);
-        stack->top = NULL;
-    }
-    else {
-        free(stack->top);
+    FREE(stack->top);
+    if (stack->cur_pos != 0) {
         stack->cur_pos--;
         stack->top = stack->stack[stack->cur_pos];
+    }
+    else {
+        stack->cur_pos = -1;
+        stack->top = NULL;
+    }
+
+    return STACK_SUCCESS;
+}
+
+
+// NOTE: this does NOT free() members under its struct.
+stack_ret
+stack_clear(ForthStack *stack)
+{
+    if (stack == NULL) return STACK_ARG_ERROR;
+    if (stack->top == NULL || stack->cur_pos < 0) return STACK_RANGE_ERROR;
+
+    while (stack->top != NULL) {
+        stack_pop(stack);
     }
 
     return STACK_SUCCESS;
@@ -91,14 +108,13 @@ stack_destruct(ForthStack *stack)
     if (stack == NULL) return STACK_ARG_ERROR;
     if (stack->stack == NULL) return STACK_ARG_ERROR;
 
+    // free the (void*) addresses.
     while (stack->cur_pos > 0) {
         stack_ret ret = stack_pop(stack);
         if (ret != STACK_SUCCESS) return ret;
     }
-    free(stack->stack);
-    stack->stack = NULL;
+    // free the pointer.
+    FREE(stack->stack);
 
     return STACK_SUCCESS;
 }
-
-
