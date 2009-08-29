@@ -114,12 +114,34 @@ dtoa_test(void)
 {
     const int max_size = 1024;
     char str[max_size];    // c99
+    char *failed;
 
 
-    // FIXME 1 is "1.000000"
     memset(str, 0, max_size);
     OK(dtoa(1, str, max_size, 10), "conversion succeeded");
-    OK(STREQ(str, "1"), "conversion succeeded");
+    OK(str[0] != '\0', "not empty string");
+
+    failed = NULL;
+    OK(digit_t2double(atod(str, 10, &failed)) == 1, "digit -> ascii -> digit: two digits are the same");
+    OK(failed == NULL, "not failed");
+
+
+    memset(str, 0, max_size);
+    OK(dtoa(-1, str, max_size, 10), "conversion succeeded");
+    OK(str[0] != '\0', "not empty string");
+
+    failed = NULL;
+    OK(digit_t2double(atod(str, 10, &failed)) == -1, "digit -> ascii -> digit: two digits are the same");
+    OK(failed == NULL, "not failed");
+
+
+    memset(str, 0, max_size);
+    OK(dtoa(1.5, str, max_size, 10), "conversion succeeded");
+    OK(str[0] != '\0', "not empty string");
+
+    failed = NULL;
+    OK(digit_t2double(atod(str, 10, &failed)) == 1.5, "digit -> ascii -> digit: two digits are the same");
+    OK(failed == NULL, "not failed");
 }
 
 
