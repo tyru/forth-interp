@@ -7,37 +7,30 @@
 
 
 
-// not on c99 environment, this declaration may be invalid.
-// (if next variable declaration was found)
-#define DECL_TOKEN(varname) \
-    ForthToken varname; \
-    varname.name = NULL
+#define is_skip_char(c) \
+    ( \
+        ((c) != '\0') \
+        && \
+        isspace(c) \
+    )
+
+#define is_digit_char(c) \
+    ( \
+        ((c) != '\0') \
+        && \
+        (! is_skip_char(c)) \
+        && \
+        (isdigit(c) || (c) == '.') \
+    )
+
+#define is_word_char(c) \
+    ( \
+        ((c) != '\0') \
+        && \
+        (! is_skip_char(c)) \
+    )
 
 
-
-// forth token type
-enum token_type {
-    TOKEN_UNDEF = 0,    // unknown token
-    TOKEN_STRING,       // string
-    TOKEN_DIGIT,        // digit
-    TOKEN_FUNC,         // forth's word
-};
-typedef enum token_type token_type;
-
-
-// forth token
-struct ForthToken {
-    char        *name;
-    token_type  type;
-};
-
-
-
-void
-token_destruct(ForthToken *token);
-
-bool
-is_skip_char(int c);
 
 bool
 is_string(const char *token);

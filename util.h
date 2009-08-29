@@ -23,18 +23,22 @@
 // NOTE: FREE() makes code spam-ish.
 #define FREE(ptr) \
     do { \
-        if (ptr != NULL) { \
+        if ((ptr) != NULL) { \
             free(ptr); \
-            ptr = NULL; \
+            (ptr) = NULL; \
         } \
     } while (0)
 
-#define ASSERT(cond) \
+#define ASSERT(interp, cond) \
     do { \
-        if (! cond) { \
-            forth_die(interp, "ASSERT", FORTH_ERR_ASSERT_FAILED); \
+        if (! (cond)) { \
+            fprintf(stderr, "file %s, line %d: ", __FILE__, __LINE__); \
+            forth_die((interp), "ASSERT", FORTH_ERR_ASSERT_FAILED); \
         } \
     } while (0)
+
+#define AC_TOP_WORD(interp) \
+    CAST(ForthWord*, (interp)->word_stack.top)
 
 
 
@@ -54,18 +58,14 @@ strcount(const char *s, int c);
 char*
 strtok_r(char *str, const char *delim, char **saveptr);
 
-// token_type -> word_type
-word_type
-token_type2word_type(token_type type);
+// almost code from 'man 3 strtol'.
+// if failed, *failed is not NULL.
+digit_t
+atod(const char *digit_str, int base, char **failed);
 
-// word_type -> token_type
-token_type
-word_type2token_id(word_type type);
-
-// true: success
-// false: can't allocate memory for word
+// on success, return true.
 bool
-token_to_word(ForthWord *word, ForthToken *token);
+dtoa(digit_t digit, char *ascii, size_t max_size, int base);
 
 
 #endif /* UTIL_H */

@@ -7,6 +7,7 @@
 #include "parser.h"
 #include "token.h"
 #include "word.h"
+#include "digit.h"
 
 #include "stack.h"
 #include "util.h"
@@ -17,10 +18,9 @@
 
 
 
-
 // forth's variables
 struct ForthVar {
-    char    *name;
+    char    *tok_str;
     value_t value;
 };
 typedef struct ForthVar ForthVar;
@@ -37,7 +37,9 @@ enum forth_err_id {
     FORTH_ERR_UNCLOSED_STR,
     FORTH_ERR_BAD_STRING,
     FORTH_ERR_BAD_DIGIT,
+    FORTH_ERR_CONVERT_FAILED,
     FORTH_ERR_ASSERT_FAILED,
+    FORTH_ERR_NOT_FOUND_TOKEN,
 };
 typedef enum forth_err_id forth_err_id;
 
@@ -57,12 +59,14 @@ struct ForthInterp {
 
     ForthStack word_stack;     // stack
 
+    // TODO
+    // manage words definitions with simple pair.
     ForthWord  *word_def;       // forth's word definitions
     uint       word_pos;
 
     // ForthVar   *vars;
 
-    int        errno;           // error id set by api
+    int        errid;           // error id set by api
 };
 
 
@@ -91,10 +95,13 @@ void
 forth_clear_src(ForthInterp *interp);
 
 void
+forth_clear_stack(ForthInterp *interp);
+
+void
 forth_run_src(ForthInterp *interp);
 
 void*
-forth_malloc_noret(ForthInterp *interp, size_t size);
+forth_malloc(ForthInterp *interp, size_t size);
 
 void
 forth_die(ForthInterp *interp, const char *msg, forth_err_id id);
@@ -109,42 +116,45 @@ bool
 forth_src_eof(ForthInterp *interp);
 
 
-/* stack */
-void
-forth_push_stack_noret(ForthInterp *interp, ForthStack *stack, void *val);
-
 
 /* parser */
+
+void
+forth_get_all_words(ForthInterp *interp);
+
 bool
 forth_get_word(ForthInterp *interp);
 
 
+
 /* word */
+
+// NOTE: copy the address of tok_str.
 void
-forth_regist_word(ForthInterp *interp, const char *name, word_func_t func);
+forth_regist_word(ForthInterp *interp, const char *tok_str, word_func_t func);
 
-// TODO
-// token_type
-// forth_get_word_type(ForthInterp *interp, const char *token);
+// evaluate word->tok_str.
+// NOTE: word->type and word->tok_str must be set.
+void
+forth_eval_word(ForthInterp *interp, ForthWord *word);
 
-// TODO
-// token_type
-// forth_get_word_func(ForthInterp *interp, const char *token);
 
 
 /* token */
-token_type
-forth_get_token_type(ForthInterp *interp, const char *token);
 
-word_func_t
-forth_get_token_func(ForthInterp *interp, const char *token);
+word_type
+forth_get_word_type(ForthInterp *interp, const char *token);
+
+ForthWord*
+forth_get_word_def(ForthInterp *interp, const char *token);
+
 
 
 /* util */
 
-// this returns always true.
-bool
-forth_token_to_word(ForthInterp *interp, ForthWord *word, ForthToken *token);
+// convert token to word.
+void
+forth_token2word(ForthInterp *interp, const char *token, ForthWord *word);
 
 
 #endif /* FORTH_H */

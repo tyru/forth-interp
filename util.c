@@ -2,7 +2,7 @@
  * util.c - functions which does NOT take 'ForthInterp' as arg 1
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-28.
+ * Last Change: 2009-08-29.
  *
  */
 
@@ -16,6 +16,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
+#include <errno.h>
 
 
 
@@ -25,6 +26,8 @@ d_printf(const char* format, ...)
 #if NDEBUG
     va_list ap;
     int result;
+
+    fputs("[debug]::", stderr);
 
     va_start(ap, format);
     result = vprintf(format, ap);
@@ -41,6 +44,7 @@ int
 d_print(const char* msg)
 {
 #if NDEBUG
+    fputs("[debug]::", stderr);
     fputs(msg, stdout);
     return 1;
 #else
@@ -89,32 +93,45 @@ strtok_r(char *str, const char *delim, char **saveptr)
 }
 
 
-// token_type -> word_type
-word_type
-token_type2word_type(token_type type)
+// almost code from 'man 3 strtol'.
+// if failed, *failed is not NULL.
+digit_t
+atod(const char *digit_str, int base, char **failed)
 {
-    return (word_type)type;
+    char *end_ptr;
+    double val;
+
+    // TODO support base
+    UNUSED_ARG(base);
+
+    errno = 0;
+    val = strtod(digit_str, &end_ptr);
+
+    if (errno == ERANGE || (errno != 0 && val == 0)) {
+        *failed = CAST(char*, digit_str);
+        return (digit_t)0;
+    }
+    if (end_ptr == digit_str) {
+        *failed = CAST(char*, digit_str);
+        return (digit_t)0;
+    }
+    if (*end_ptr != '\0') {
+        *failed = CAST(char*, digit_str);
+        return (digit_t)0;
+    }
+
+    return double2digit_t(val);
 }
 
 
-// word_type -> token_type
-token_type
-word_type2token_id(word_type type)
-{
-    return (token_type)type;
-}
-
-
-// true: success
-// false: can't allocate memory for word
+// on success, return true.
+// XXX: currently this does NOT care max_size!
 bool
-token_to_word_copy(ForthWord *word, ForthToken *token)
+dtoa(digit_t digit, char *ascii, size_t max_size, int base)
 {
-    word->name = CAST(char*, malloc(strlen(token->name) + 1));
-    if (word->name == NULL) return false;
+    UNUSED_ARG(max_size);
+    UNUSED_ARG(base);    // TODO support base
 
-    word->type = token_type2word_type(token->type);
-    word->func = CAST(word_func_t, 0);
-
+    sprintf(ascii, "%f", digit);
     return true;
 }

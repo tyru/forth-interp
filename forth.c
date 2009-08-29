@@ -2,7 +2,7 @@
  * forth.c - api of forth
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-28.
+ * Last Change: 2009-08-30.
  *
  */
 
@@ -19,6 +19,7 @@
 
 #include <alloca.h>
 #include <ctype.h>
+#include <errno.h>
 
 
 
@@ -27,7 +28,7 @@
 void
 forth_init(ForthInterp *interp)
 {
-    /* don't use forth_malloc_noret() in this func. */
+    /* don't use forth_malloc() in this func. */
 
     /* initialize constant and counter */
     interp->max_src_len  = SRC_DFL_BYTE;
@@ -37,7 +38,7 @@ forth_init(ForthInterp *interp)
     interp->cur_pos = 0;
 
     /* initialize error variables */
-    interp->errno = FORTH_ERR_NOERR;
+    interp->errid = FORTH_ERR_NOERR;
 
     /* initialize source code storage */
     interp->src = CAST(char*, malloc(SRC_DFL_BYTE));
@@ -47,6 +48,7 @@ forth_init(ForthInterp *interp)
     interp->word_def = CAST(
         ForthWord*, calloc(sizeof(ForthWord), 4)
     );
+    word_init(interp->word_def);
     interp->word_pos = 0;
 
     forth_regist_word(interp, "+", forth_word_plus);
@@ -79,8 +81,8 @@ void
 forth_destruct(ForthInterp *interp)
 {
     // free the (void*) addresses.
-    while (interp->word_stack.top != NULL) {
-        word_destruct(CAST(ForthWord*, interp->word_stack.top));
+    while (AC_TOP_WORD(interp) != NULL) {
+        word_destruct(AC_TOP_WORD(interp));
         stack_pop(&(interp->word_stack));
     }
     // free the pointer.
@@ -153,7 +155,7 @@ forth_set_src(ForthInterp *interp, char *src)
 {
     size_t len = strlen(src);
     if (len >= interp->max_src_len) {
-        interp->errno = FORTH_ERR_OVERFLOW;
+        interp->errid = FORTH_ERR_OVERFLOW;
         forth_die(interp, "forth_set_src", -1);
     }
 
@@ -178,14 +180,26 @@ forth_clear_src(ForthInterp *interp)
 
 
 void
+forth_clear_stack(ForthInterp *interp)
+{
+    while (AC_TOP_WORD(interp) != NULL) {
+        d_printf("pop![%s]\n", AC_TOP_WORD(interp)->tok_str.str);
+        word_destruct(AC_TOP_WORD(interp));
+        stack_pop(&(interp->word_stack));
+    }
+}
+
+
+void
 forth_run_src(ForthInterp *interp)
 {
     int i;
     // copy original source code.
-    char orig_src[interp->src_len + 1];
+    char orig_src[interp->src_len + 1];    // c99
     strncpy(orig_src, interp->src, interp->src_len + 1);
     // line
     char **lines;
+
 
     // allocate char** pointers.
     size_t line_num = strcount(orig_src, '\n') + 1;
@@ -211,64 +225,30 @@ forth_run_src(ForthInterp *interp)
         d_printf("[%s] - eval begin.\n", interp->src);
 
         // get words as possible.
-        while (1) {
-            bool success = forth_get_word(interp);    // get and push the word.
-            if (interp->errno == FORTH_ERR_EOF)    // eof
-                break;
-            if (! success)    // other error
-                forth_die(interp, "forth_get_word", -1);
+        forth_get_all_words(interp);
 
-            ForthWord *word = CAST(ForthWord*, interp->word_stack.top);
-            d_printf("debug: read [%s].\n", word->name);
-
-            // concerning comparison result, add volatile.
-            volatile word_func_t func;
-            // dispatch process by its type.
-            switch (word->type) {
-                case WORD_UNDEF:
-                    fprintf(stderr,
-                            "%s: unknown token\n",
-                            DEREF(ForthWord, interp->word_stack.top).name);
-                    return;
-
-                case WORD_FUNC:
-                    // pop the top of word.
-                    func = word->func;
-
-                    word_destruct(word);
-                    stack_pop(&(interp->word_stack));
-
-                    ASSERT(func != WORD_NULL_FUNC);
-                    func(interp);
-
-                    break;
-
-                default:
-                    /* nop */
-                    break;
-            }
-        }
         d_printf("[%s] - eval end.\n", interp->src);
 
         // pop all stacks.
-        while (interp->word_stack.top != NULL) {
-            d_printf("pop stacks...[%s]\n",
-                    DEREF(ForthWord, interp->word_stack.top).name);
-            word_destruct(CAST(ForthWord*, interp->word_stack.top));
-            stack_pop(&(interp->word_stack));
-        }
+        forth_clear_stack(interp);
     }
 }
 
 
 void*
-forth_malloc_noret(ForthInterp *interp, size_t size)
+forth_malloc(ForthInterp *interp, size_t size)
 {
     void *ptr = malloc(size);
+
     if (ptr == NULL) {
-        interp->errno = FORTH_ERR_ALLOC;
+        interp->errid = FORTH_ERR_ALLOC;
         forth_die(interp, "malloc", -1);
     }
+    if (errno == ENOMEM) {
+        interp->errid = FORTH_ERR_ALLOC;
+        forth_die(interp, "malloc", -1);
+    }
+
     return ptr;
 }
 
@@ -276,7 +256,7 @@ forth_malloc_noret(ForthInterp *interp, size_t size)
 void
 forth_die(ForthInterp *interp, const char *msg, forth_err_id id)
 {
-    if ((int)id != -1) interp->errno = id;
+    if ((int)id != -1) interp->errid = id;
     forth_perror(interp, msg);
     forth_exit(interp, EXIT_FAILURE);
 }
@@ -287,7 +267,7 @@ forth_perror(ForthInterp *interp, const char *msg)
 {
     fprintf(stderr, "%s: ", msg);
 
-    switch (interp->errno) {
+    switch (interp->errid) {
         case FORTH_ERR_ARGS:
             fputs("arguments error", stderr);
             break;
@@ -309,8 +289,15 @@ forth_perror(ForthInterp *interp, const char *msg)
         case FORTH_ERR_BAD_DIGIT:
             fputs("malformed digit", stderr);
             break;
+        case FORTH_ERR_CONVERT_FAILED:
+            fputs("can't convert something to other types", stderr);
+            break;
+        case FORTH_ERR_NOT_FOUND_TOKEN:
+            fputs("parser ended parsing but even any token had been not found", stderr);
+            break;
+
         case FORTH_ERR_ASSERT_FAILED:
-            fputs("sorry, assertion was failed.", stderr);
+            fputs("sorry, my assertion failed...", stderr);
             break;
 
         default:
@@ -337,119 +324,195 @@ forth_src_eof(ForthInterp *interp)
 }
 
 
-/* stack */
+/* parser */
 
 void
-forth_push_stack_noret(ForthInterp *interp, ForthStack *stack, void *val)
+forth_get_all_words(ForthInterp *interp)
 {
-    stack_ret ret = stack_push(stack, val);
-    if (ret != STACK_SUCCESS) { switch (ret) { // STACK_ARG_ERROR -> FORTH_ERR_ARGS
-            case STACK_ARG_ERROR:
-                interp->errno = FORTH_ERR_ARGS;
-                break;
+    while (1) {
+        bool success = forth_get_word(interp);    // get and push the word.
+        if (interp->errid == FORTH_ERR_EOF)    // eof
+            break;
+        if (! success)    // other error
+            forth_die(interp, "forth_get_word", -1);
 
-            // STACK_RANGE_ERROR -> FORTH_ERR_STACK_OVERFLOW
-            case STACK_RANGE_ERROR:
-                interp->errno = FORTH_ERR_STACK_OVERFLOW;
-                break;
+        // convert current top word to string.
+        ForthWord *word = AC_TOP_WORD(interp);
 
-            // STACK_ALLOC_ERROR -> FORTH_ERR_ALLOC
-            case STACK_ALLOC_ERROR:
-                interp->errno = FORTH_ERR_ALLOC;
+        // NOTE: concerning comparison result, add volatile.
+        volatile word_func_t func;
+        // dispatch process by its type.
+        switch (word->type) {
+            case WORD_UNDEF:
+                fprintf(stderr,
+                        "%s: unknown token\n",
+                        word->tok_str.str);
+                return;
+
+            case WORD_FUNC:
+                // pop the top of word.
+                func = word->func;
+
+                word_destruct(word);
+                stack_pop(&(interp->word_stack));
+
+                ASSERT(interp, func != WORD_NULL_FUNC);
+                func(interp);
+
                 break;
 
             default:
-                /* STACK_SUCCESS is not handled */
+                /* nop */
                 break;
         }
-
-        forth_die(interp, "stack_push", -1);
     }
 }
 
-
-/* parser */
 
 // get token, convert it, push it to interp->word.
 bool
 forth_get_word(ForthInterp *interp)
 {
-    DECL_TOKEN(token);
-    DECL_WORD(word);
+    char token[interp->max_word_len];    // c99
+    ForthWord word;
 
+    word_init(&word);
 
     // parse interp->src
-    bool success = forth_get_token_from_src(interp, &token, interp->max_word_len);
+    // NOTE: token will be allocated.
+    bool success = forth_get_token_from_src(interp, token, interp->max_word_len);
 
     if (success) {
-        // convert: ForthToken -> ForthWord
-        // NOTE: copying the address of token.name
-        if (! forth_token_to_word(interp, &word, &token))
-            forth_die(interp, "forth_token_to_word", FORTH_ERR_ALLOC);
-
+        d_printf("read [%s].\n", token);
+        // convert: char* -> ForthWord
+        forth_token2word(interp, token, &word);
         // push it.
+        d_printf("push![%s]\n", token);
         stack_push(&(interp->word_stack), &word);
     }
 
+    // don't free pushed word! stack_push() copies only all bytes of struct.
+    // word_destruct(&word);
+
+    // to trap EOF outside of this function,
+    // this func must return this value.
+    // (do not die in this func!)
     return success;
+
+    // 'word' at stack area is free()d but copied to interp->word_stack.
 }
 
 
 /* word */
 
+// NOTE: copy the address of tok_str.
 void
-forth_regist_word(ForthInterp *interp, const char *name, word_func_t func)
+forth_regist_word(ForthInterp *interp, const char *tok_str, word_func_t func)
 {
-    interp->word_def[interp->word_pos].name = CAST(char*, name);
+    // NOTE: copy the address of tok_str.
+    word_set_tok_str(interp->word_def + interp->word_pos, tok_str);
     interp->word_def[interp->word_pos].func = func;
+    interp->word_def[interp->word_pos].type = WORD_FUNC;
+
     interp->word_pos++;
+}
+
+
+// evaluate word->tok_str.
+// NOTE: word->type and word->tok_str must be set.
+void
+forth_eval_word(ForthInterp *interp, ForthWord *word)
+{
+    char temp_word[interp->max_word_len];    // c99
+
+    // TODO
+    if (word->type == WORD_DIGIT) {
+        if (! word->digitval.is_set) {
+            ASSERT(interp, word->tok_str.str != NULL);
+            char *err = NULL;
+
+            digit_t d = atod(word->tok_str.str, 10, &err);
+            if (err != NULL) {
+                fprintf(stderr, "%s: ", word->tok_str.str);
+                forth_die(interp, "atod", FORTH_ERR_CONVERT_FAILED);
+            }
+
+            word_set_digit(word, d);
+        }
+
+        if (! dtoa(word->digitval.digit, temp_word, interp->max_word_len, 10)) {
+            forth_die(interp, "dtoa", FORTH_ERR_CONVERT_FAILED);
+        }
+
+        word_set_str_copy(word, temp_word);
+    }
+    else if (word->type == WORD_FUNC) {
+        // if (word->strval.str == NULL)
+        //     forth_die(interp, "forth_eval_word", FORTH_ERR_CONVERT_FAILED);
+        // ForthWord *word = forth_get_word_def(interp, word->strval.str);
+        // if (word == NULL)
+        //     forth_die(interp, "forth_get_word_def", FORTH_ERR_CONVERT_FAILED);
+    }
+    else if (word->type == WORD_STRING) {
+        // TODO
+    }
+    else if (word->type == WORD_UNDEF) {
+        /* nop */
+    }
 }
 
 
 /* token */
 
-token_type
-forth_get_token_type(ForthInterp *interp, const char *token)
+word_type
+forth_get_word_type(ForthInterp *interp, const char *token)
 {
-    // TODO bsearch() sorted array.
-    for (size_t i = 0; i < interp->word_pos; i++) {
-        if (STREQ(token, interp->word_def[i].name))
-            return TOKEN_FUNC;
-    }
-    if (is_string(token)) return TOKEN_STRING;
-    if (is_digit(token)) return TOKEN_DIGIT;
+    if (forth_get_word_def(interp, token) != NULL)
+        return WORD_FUNC;
+    if (is_string(token))
+        return WORD_STRING;
+    if (is_digit(token))
+        return WORD_DIGIT;
 
-    return TOKEN_UNDEF;
+    return WORD_UNDEF;
 }
 
 
-word_func_t
-forth_get_token_func(ForthInterp *interp, const char *token)
+ForthWord*
+forth_get_word_def(ForthInterp *interp, const char *token)
 {
     // TODO bsearch() sorted array.
     for (size_t i = 0; i < interp->word_pos; i++) {
-        if (STREQ(token, interp->word_def[i].name))
-            return interp->word_def[i].func;
+        // XXX interp->word_def[i].token.str can't be NULL?
+        if (STREQ(token, interp->word_def[i].tok_str.str))
+            return interp->word_def + i;
     }
-    return WORD_NULL_FUNC;
+    return NULL;
 }
 
 
 /* util */
 
-// this returns always true.
-bool
-forth_token_to_word(ForthInterp *interp, ForthWord *word, ForthToken *token)
+// convert token to word.
+void
+forth_token2word(ForthInterp *interp, const char *token, ForthWord *word)
 {
-    word->name = token->name;
-    word->type = token_type2word_type(token->type);
+    // identify token's type.
+    word->type = forth_get_word_type(interp, token);
 
-    if (word->type == TOKEN_FUNC) {
-        word->func = forth_get_token_func(interp, token->name);
+    // copy parsed string to tok_str.
+    word_set_tok_str_copy(word, token);
+
+    // eval word->tok_str.
+    forth_eval_word(interp, word);
+
+    // find token's func.
+    if (word->type == WORD_FUNC) {
+        ForthWord *w = forth_get_word_def(interp, token);
+        if (w == NULL) return;
+        word->func = w->func;
     }
     else {
         word->func = WORD_NULL_FUNC;
     }
-
-    return true;
 }

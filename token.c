@@ -2,7 +2,7 @@
  * token.c - forth's tokens
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-28.
+ * Last Change: 2009-08-29.
  *
  */
 
@@ -15,27 +15,12 @@
 
 
 
-void
-token_destruct(ForthToken *token)
-{
-    FREE(token->name);
-}
-
-
-bool
-is_skip_char(int c)
-{
-    return
-        isspace(c)
-        ;
-}
-
-
 bool
 is_string(const char *token)
 {
     return
-        token[0] == '"' &&
+        token[0] == '"'
+        &&
         token[strlen(token)] == '"'
         ;
 }

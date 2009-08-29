@@ -15,8 +15,8 @@ typedef struct ForthStack ForthStack;
 struct ForthWord;
 typedef struct ForthWord ForthWord;
 
-struct ForthToken;
-typedef struct ForthToken ForthToken;
+// struct ForthToken;
+// typedef struct ForthToken ForthToken;
 
 
 #endif /* TYPE_H */

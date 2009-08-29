@@ -1,14 +1,13 @@
-.PHONY: all full-test test leak-test depend clean
-
-NDEBUG   = -DNDEBUG=1
+.PHONY: all db full-test test leak-test depend clean
 
 CC       = gcc
-INCLUDES =
-CFLAGS   = $(NDEBUG) $(INCLUDES) -g -Wall -W -pedantic -std=c99
 LIBS     =
+INCLUDES =
+# CFLAGS   = $(INCLUDES) -Wall -W -pedantic -std=c99 -O2    # release build
+CFLAGS   = -DNDEBUG=1 $(INCLUDES) -g -Wall -W -pedantic -std=c99    # debug build
 
 EXE      = myforth
-SRC      = main.c forth.c util.c stack.c parser.c word.c token.c
+SRC      = main.c forth.c util.c stack.c parser.c word.c token.c digit.c
 OBJS     = $(SRC:.c=.o)
 
 OBJS_NOMAIN = `for i in $(OBJS); do echo $$i; done | grep -v 'main\.o'`
@@ -21,11 +20,16 @@ all: $(EXE)
 
 # link
 $(EXE): $(OBJS)
-	$(CC) $(LIBS) -o $(EXE) $(OBJS) $(LIBS)
+	$(CC) -o $(EXE) $(OBJS) $(LIBS)
 
 # compile
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
+
+
+# db
+db: $(EXE)
+	\gdb ./$(EXE)
 
 
 # full-test
@@ -47,9 +51,11 @@ leak-test:
 	sleep 1
 	for i in $(TEST); do valgrind --leak-check=full $(TEST_DIR)/$$i; done
 
+
 # depend
 depend:
 	\makedepend -- $(CFLAGS) -- $(SRC)
+
 
 # clean
 clean:
