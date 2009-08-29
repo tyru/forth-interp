@@ -11,7 +11,7 @@ SRC      = main.c forth.c util.c stack.c parser.c word.c token.c digit.c
 OBJS     = $(SRC:.c=.o)
 
 OBJS_NOMAIN = `for i in $(OBJS); do echo $$i; done | grep -v 'main\.o'`
-TEST        = word-test stack-test parser-test util-test
+TEST        = word-test stack-test parser-test util-test digit-test
 TEST_DIR    = t
 
 
