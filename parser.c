@@ -2,7 +2,7 @@
  * parser.c - parser
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-29.
+ * Last Change: 2009-08-30.
  *
  */
 
@@ -64,18 +64,22 @@ forth_get_token_from_src(
 
                 /* not found '"' */
                 if (end == NULL) {
-                    forth_die(interp, "forth_get_token_from_src", FORTH_ERR_UNCLOSED_STR);
+                    interp->errid = FORTH_ERR_UNCLOSED_STR;
+                    return false;
                 }
                 /* found it */
                 else if (*(end - 1) != '\\') {    // if not escaped string.
+                    size_t len = end - begin + 1;
 
                     ASSERT(interp, begin < end);
-                    if (CAST(size_t, end - begin) > max_size)
+                    if (CAST(size_t, len) > max_size)
                         goto FORTH_ERR_OVERFLOW;
 
                     // copy string with double quotes.
-                    strncpy(token, begin, end - begin);
-                    token[end - begin] = '\0';
+                    strncpy(token, begin, len);
+                    token[len] = '\0';
+
+                    interp->cur_pos += len;
 
                     break;
                 }
@@ -87,11 +91,13 @@ forth_get_token_from_src(
 
             if (! is_string(token)) {
                 fprintf(stderr, "%s: ", token);
-                forth_die(interp, "forth_get_token_from_src", FORTH_ERR_BAD_STRING);
+                interp->errid = FORTH_ERR_BAD_STRING;
+                return false;
             }
 
             d_printf("string token found: %s\n", token);
             found = true;
+
             goto END_PARSING;
         }
 
@@ -120,7 +126,8 @@ forth_get_token_from_src(
 
             if (! is_digit(token)) {
                 fprintf(stderr, "%s: ", token);
-                forth_die(interp, "forth_get_token_from_src", FORTH_ERR_BAD_DIGIT);
+                interp->errid = FORTH_ERR_BAD_DIGIT;
+                return false;
             }
 
             d_printf("digit token found: %s\n", token);
@@ -165,28 +172,34 @@ forth_get_token_from_src(
 
 
 END_PARSING:
-    if (! found) {
-        forth_die(interp, "forth_get_token_from_src", FORTH_ERR_NOT_FOUND_TOKEN);
+    if (found) {
+        // there was no error.
+        interp->errid = FORTH_ERR_NOERR;
+        return true;
+    }
+    else {
+        interp->errid = FORTH_ERR_NOT_FOUND_TOKEN;
+        return false;
     }
 
-    // there was no error.
-    interp->errid = FORTH_ERR_NOERR;
 
-    return true;
+FORTH_ERR_EOF:
+    interp->errid = FORTH_ERR_EOF;
+    token[0] = '\0';
+    return false;
 
-
-    /* error handling */
+    /* fatal error handling */
 
 FORTH_ERR_ARGS:
     forth_die(interp, "forth_get_token_from_src", FORTH_ERR_ARGS);
     /* NOTREACHED */
 
+    // gcc won't read above!
+    return false;
+
 FORTH_ERR_OVERFLOW:
     forth_die(interp, "forth_get_token_from_src", FORTH_ERR_OVERFLOW);
     /* NOTREACHED */
 
-FORTH_ERR_EOF:
-    interp->errid = FORTH_ERR_EOF;
-    token = NULL;
     return false;
 }

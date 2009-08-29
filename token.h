@@ -32,6 +32,7 @@
 
 
 
+// string is closed with double quotes.
 bool
 is_string(const char *token);
 

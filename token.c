@@ -2,7 +2,7 @@
  * token.c - forth's tokens
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-29.
+ * Last Change: 2009-08-30.
  *
  */
 
@@ -15,14 +15,17 @@
 
 
 
+// string is closed with double quotes.
 bool
 is_string(const char *token)
 {
-    return
-        token[0] == '"'
-        &&
-        token[strlen(token)] == '"'
-        ;
+    if (token[0] != '"') return false;
+
+    size_t len = strlen(token);
+    if (len < 2) return false;    // double quotes
+    if (token[len - 1] != '"') return false;
+
+    return true;
 }
 
 

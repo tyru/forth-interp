@@ -11,6 +11,7 @@
 
 #define WORD_NULL_FUNC      ((word_func_t)0)
 
+#define WORD_FUNC_STR       "(function)"
 
 
 

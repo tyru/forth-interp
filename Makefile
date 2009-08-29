@@ -44,11 +44,13 @@ test: $(EXE)
 leak-test:
 	### $(EXE)
 	echo "leak test of $(EXE)..."
-	sleep 1
+	echo -n "press enter to continue..."
+	read
 	valgrind --leak-check=full ./$(EXE)
 	### tests
 	echo "leak test of test codes..."
-	sleep 1
+	echo -n "press enter to continue..."
+	read
 	for i in $(TEST); do valgrind --leak-check=full $(TEST_DIR)/$$i; done
 
 

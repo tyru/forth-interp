@@ -89,6 +89,7 @@ word_set_tok_str_copy(ForthWord *word, const char *str)
 {
     size_t len = strlen(str);
 
+    // TODO use realloc()
     word->tok_str.str = malloc(len + 1);
     if (word->tok_str.str == NULL) {
         FREE(word->tok_str.str);    // for safety
@@ -123,6 +124,7 @@ word_set_str_copy(ForthWord *word, const char *str)
 {
     size_t len = strlen(str);
 
+    // TODO use realloc()
     word->strval.str = malloc(len + 1);
     if (word->strval.str == NULL) {
         FREE(word->strval.str);    // for safety

@@ -263,6 +263,14 @@ forth_die(ForthInterp *interp, const char *msg, forth_err_id id)
 
 
 void
+forth_error(ForthInterp *interp, const char *msg, forth_err_id id)
+{
+    fprintf(stderr, "[error]:: %s\n", msg);
+    forth_die(interp, "forth_error", id);
+}
+
+
+void
 forth_perror(ForthInterp *interp, const char *msg)
 {
     fprintf(stderr, "%s: ", msg);
@@ -423,9 +431,6 @@ forth_regist_word(ForthInterp *interp, const char *tok_str, word_func_t func)
 void
 forth_eval_word(ForthInterp *interp, ForthWord *word)
 {
-    char temp_word[interp->max_word_len];    // c99
-
-    // TODO
     if (word->type == WORD_DIGIT) {
         if (! word->digitval.is_set) {
             ASSERT(interp, word->tok_str.str != NULL);
@@ -439,25 +444,60 @@ forth_eval_word(ForthInterp *interp, ForthWord *word)
 
             word_set_digit(word, d);
         }
-
-        if (! dtoa(word->digitval.digit, temp_word, interp->max_word_len, 10)) {
-            forth_die(interp, "dtoa", FORTH_ERR_CONVERT_FAILED);
-        }
-
-        word_set_str_copy(word, temp_word);
-    }
-    else if (word->type == WORD_FUNC) {
-        // if (word->strval.str == NULL)
-        //     forth_die(interp, "forth_eval_word", FORTH_ERR_CONVERT_FAILED);
-        // ForthWord *word = forth_get_word_def(interp, word->strval.str);
-        // if (word == NULL)
-        //     forth_die(interp, "forth_get_word_def", FORTH_ERR_CONVERT_FAILED);
     }
     else if (word->type == WORD_STRING) {
-        // TODO
+        if (word->strval.str == NULL) {
+            size_t len = strlen(word->tok_str.str);
+            char str[len + 1];    // evaluated string.
+
+            // empty string.
+            if (STREQ(word->tok_str.str, "\"\"")) {
+                word_set_str(word, "");
+                return;
+            }
+
+            char *begin, *end, *cur_srch_pos;
+            // set inside double quotes
+            cur_srch_pos = begin = word->tok_str.str + 1;
+            end = word->tok_str.str + word->tok_str.len - 2;    // remember null byte.
+
+            // original code from parser.c
+            while (1) {
+                end = strchr(cur_srch_pos, '"');
+
+                /* not found '"' */
+                if (end == NULL) {
+                    // process can't reach this block
+                    // because parser checks this when parsing.
+                    forth_die(interp, "forth_eval_word", FORTH_ERR_UNCLOSED_STR);
+                }
+                /* found it */
+                else if (*(end - 1) != '\\') {    // if not escaped string.
+                    strncpy(str, begin, end - begin);
+                    str[end - begin] = '\0';
+                    word_set_str_copy(word, str);
+
+                    return;
+                }
+                /* found but it was escaped. search again. */
+                else {
+                    // TODO escape sequence.
+                    cur_srch_pos = end;
+                }
+            }
+        }
+    }
+    else if (word->type == WORD_FUNC) {
+        forth_error(interp, "tried to convert word func to string.", FORTH_ERR_CONVERT_FAILED);
+
+        // no strict? (in Perl)
+        // word_set_str_copy(word, WORD_FUNC_STR);
     }
     else if (word->type == WORD_UNDEF) {
-        /* nop */
+        forth_error(interp, "tried to convert undefined word to string.", FORTH_ERR_CONVERT_FAILED);
+
+        // no strict? (in Perl)
+        // word_set_str_copy(word, "");
     }
 }
 
