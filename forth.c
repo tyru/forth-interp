@@ -499,6 +499,46 @@ forth_eval_word(ForthInterp *interp, ForthWord *word)
         // no strict? (in Perl)
         // word_set_str_copy(word, "");
     }
+    else {
+        // never reach this block
+        ASSERT(interp, 0);
+    }
+}
+
+
+void
+forth_uneval_word(ForthInterp *interp, ForthWord *word, char *uneval, size_t max_size)
+{
+    if (word->tok_str.str != NULL) {
+        strncpy(uneval, word->tok_str.str, max_size);
+    }
+    else {
+        if (word->type == WORD_DIGIT) {
+            ASSERT(interp, word->digitval.is_set);
+
+            if (! dtoa(word->digitval.digit, uneval, max_size, 10))
+                forth_die(interp, "dtoa", FORTH_ERR_CONVERT_FAILED);
+        }
+        else if (word->type == WORD_STRING) {
+            // TODO
+        }
+        else if (word->type == WORD_FUNC) {
+            forth_error(interp, "tried to convert word func to string.", FORTH_ERR_CONVERT_FAILED);
+
+            // no strict? (in Perl)
+            // word_set_str_copy(uneval, WORD_FUNC_STR);
+        }
+        else if (word->type == WORD_UNDEF) {
+            forth_error(interp, "tried to convert undefined word to string.", FORTH_ERR_CONVERT_FAILED);
+
+            // no strict? (in Perl)
+            // word_set_str_copy(uneval, WORD_FUNC_STR);
+        }
+        else {
+            // never reach this block
+            ASSERT(interp, 0);
+        }
+    }
 }
 
 

@@ -138,6 +138,9 @@ forth_regist_word(ForthInterp *interp, const char *tok_str, word_func_t func);
 void
 forth_eval_word(ForthInterp *interp, ForthWord *word);
 
+void
+forth_uneval_word(ForthInterp *interp, ForthWord *word, char *uneval, size_t max_size);
+
 
 
 /* token */
