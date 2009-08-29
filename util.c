@@ -2,7 +2,7 @@
  * util.c - functions which does NOT take 'ForthInterp' as arg 1
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-29.
+ * Last Change: 2009-08-30.
  *
  */
 
@@ -125,13 +125,11 @@ atod(const char *digit_str, int base, char **failed)
 
 
 // on success, return true.
-// XXX: currently this does NOT care max_size!
 bool
 dtoa(digit_t digit, char *ascii, size_t max_size, int base)
 {
-    UNUSED_ARG(max_size);
     UNUSED_ARG(base);    // TODO support base
 
-    sprintf(ascii, "%f", digit);
+    snprintf(ascii, max_size, "%f", digit);
     return true;
 }
