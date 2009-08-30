@@ -99,8 +99,12 @@ forth_clear_src(ForthInterp *interp);
 void
 forth_clear_stack(ForthInterp *interp);
 
+// get words and dispatch if that is WORD_FUNC.
 void
 forth_run_src(ForthInterp *interp);
+
+void
+forth_run_src_each_line(ForthInterp *interp);
 
 void*
 forth_malloc(ForthInterp *interp, size_t size);
@@ -121,9 +125,7 @@ forth_src_eof(ForthInterp *interp);
 
 /* parser */
 
-void
-forth_get_all_words(ForthInterp *interp);
-
+// get token, convert it, push it to interp->word.
 bool
 forth_get_word(ForthInterp *interp);
 
@@ -134,6 +136,9 @@ forth_get_word(ForthInterp *interp);
 // NOTE: copy the address of tok_str.
 void
 forth_regist_word(ForthInterp *interp, const char *tok_str, word_func_t func);
+
+char*
+forth_word_as_str(ForthInterp *interp, ForthWord *word);
 
 // evaluate word->tok_str.
 // NOTE: word->type and word->tok_str must be set.

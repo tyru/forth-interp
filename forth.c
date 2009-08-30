@@ -191,8 +191,59 @@ forth_clear_stack(ForthInterp *interp)
 }
 
 
+// get words and dispatch if that is WORD_FUNC.
 void
 forth_run_src(ForthInterp *interp)
+{
+    while (1) {
+        bool success = forth_get_word(interp);    // get and push the word.
+        if (interp->errid == FORTH_ERR_EOF)    // eof
+            break;
+        if (! success)    // other error
+            forth_die(interp, "forth_get_word", -1);
+
+        // convert current top word to string.
+        ForthWord *word = AC_TOP_WORD(interp);
+
+        // NOTE: concerning comparison result, add volatile.
+        volatile word_func_t func;
+        // dispatch process by its type.
+        switch (word->type) {
+            case WORD_UNDEF:
+                fprintf(stderr,
+                        "%s: unknown token\n",
+                        word->tok_str.str);
+                return;
+
+            case WORD_FUNC:
+                ASSERT(interp, word->func != WORD_NULL_FUNC);
+                func = word->func;
+
+                d_printf("dispatch![%s]\n", word->tok_str.str);
+
+                word_destruct(word);
+                stack_pop(&(interp->word_stack));
+
+                func(interp);
+
+                if (interp->errid != FORTH_ERR_NOERR) {
+                    forth_perror(interp, WORD_FUNC_STR);
+                    interp->errid = FORTH_ERR_NOERR;
+                    return;
+                }
+
+                break;
+
+            default:
+                /* nop */
+                break;
+        }
+    }
+}
+
+
+void
+forth_run_src_each_line(ForthInterp *interp)
 {
     int i;
     char **lines;
@@ -229,7 +280,7 @@ forth_run_src(ForthInterp *interp)
         d_printf("[%s] - eval begin.\n", interp->src);
 
         // get words as possible.
-        forth_get_all_words(interp);
+        forth_run_src(interp);
 
         d_printf("[%s] - eval end.\n", interp->src);
 
@@ -343,56 +394,6 @@ forth_src_eof(ForthInterp *interp)
 
 
 /* parser */
-
-void
-forth_get_all_words(ForthInterp *interp)
-{
-    while (1) {
-        bool success = forth_get_word(interp);    // get and push the word.
-        if (interp->errid == FORTH_ERR_EOF)    // eof
-            break;
-        if (! success)    // other error
-            forth_die(interp, "forth_get_word", -1);
-
-        // convert current top word to string.
-        ForthWord *word = AC_TOP_WORD(interp);
-
-        // NOTE: concerning comparison result, add volatile.
-        volatile word_func_t func;
-        // dispatch process by its type.
-        switch (word->type) {
-            case WORD_UNDEF:
-                fprintf(stderr,
-                        "%s: unknown token\n",
-                        word->tok_str.str);
-                return;
-
-            case WORD_FUNC:
-                ASSERT(interp, word->func != WORD_NULL_FUNC);
-                func = word->func;
-
-                d_printf("dispatch![%s]\n", word->tok_str.str);
-
-                word_destruct(word);
-                stack_pop(&(interp->word_stack));
-
-                func(interp);
-
-                if (interp->errid != FORTH_ERR_NOERR) {
-                    forth_perror(interp, WORD_FUNC_STR);
-                    interp->errid = FORTH_ERR_NOERR;
-                    return;
-                }
-
-                break;
-
-            default:
-                /* nop */
-                break;
-        }
-    }
-}
-
 
 // get token, convert it, push it to interp->word.
 bool
