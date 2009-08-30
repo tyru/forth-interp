@@ -164,7 +164,6 @@ forth_word_plus(ForthInterp *interp)
 
     // this is most important thing!
     digit_t result = args[0] + args[1];
-    d_printf("%f + %f: result is %f\n", args[0], args[1], result);
 
     // push
     word_init_with_digit(&word, result);
@@ -185,7 +184,6 @@ forth_word_minus(ForthInterp *interp)
 
     // this is most important thing!
     digit_t result = args[0] - args[1];
-    d_printf("%f - %f: result is %f\n", args[0], args[1], result);
 
     // push
     word_init_with_digit(&word, result);
@@ -206,7 +204,6 @@ forth_word_multiply(ForthInterp *interp)
 
     // this is most important thing!
     digit_t result = args[0] * args[1];
-    d_printf("%f * %f: result is %f\n", args[0], args[1], result);
 
     // push
     word_init_with_digit(&word, result);
@@ -227,7 +224,6 @@ forth_word_divide(ForthInterp *interp)
 
     // this is most important thing!
     digit_t result = args[0] / args[1];
-    d_printf("%f / %f: result is %f\n", args[0], args[1], result);
 
     // push
     word_init_with_digit(&word, result);

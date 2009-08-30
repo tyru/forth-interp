@@ -218,14 +218,15 @@ forth_run_src(ForthInterp *interp)
             case WORD_FUNC:
                 ASSERT(interp, word->func != WORD_NULL_FUNC);
                 func = word->func;
-
                 d_printf("dispatch![%s]\n", word->tok_str.str);
 
+                // pop the func word
                 word_destruct(word);
                 stack_pop(&(interp->word_stack));
 
+                // dispatch!
                 func(interp);
-
+                // error check
                 if (interp->errid != FORTH_ERR_NOERR) {
                     forth_perror(interp, WORD_FUNC_STR);
                     interp->errid = FORTH_ERR_NOERR;
@@ -238,6 +239,15 @@ forth_run_src(ForthInterp *interp)
                 /* nop */
                 break;
         }
+    }
+
+    // show result
+    if (AC_TOP_WORD(interp) != NULL) {
+        printf("result was [%s]\n",
+                forth_word_as_str(interp, AC_TOP_WORD(interp)));
+    }
+    else {
+        puts("no result.");
     }
 }
 
@@ -441,6 +451,16 @@ forth_regist_word(ForthInterp *interp, const char *tok_str, word_func_t func)
     interp->word_def[interp->word_pos].type = WORD_FUNC;
 
     interp->word_pos++;
+}
+
+
+char*
+forth_word_as_str(ForthInterp *interp, ForthWord *word)
+{
+    if (word->tok_str.str == NULL) {
+        forth_uneval_word(interp, word);
+    }
+    return word->tok_str.str;
 }
 
 
