@@ -183,6 +183,7 @@ void
 forth_clear_stack(ForthInterp *interp)
 {
     while (AC_TOP_WORD(interp) != NULL) {
+        // forth_uneval_word(interp, AC_TOP_WORD(interp))
         d_printf("pop![%s]\n", AC_TOP_WORD(interp)->tok_str.str);
         word_destruct(AC_TOP_WORD(interp));
         stack_pop(&(interp->word_stack));
@@ -306,6 +307,12 @@ forth_perror(ForthInterp *interp, const char *msg)
         case FORTH_ERR_NOT_FOUND_TOKEN:
             fputs("parser ended parsing but even any token had been not found", stderr);
             break;
+        case FORTH_ERR_TOO_FEW_ARGS:
+            fputs("word received too few arguments", stderr);
+            break;
+        case FORTH_ERR_NOT_IMPLEMENTED:
+            fputs("not implemented error", stderr);
+            break;
 
         case FORTH_ERR_ASSERT_FAILED:
             fputs("sorry, my assertion failed...", stderr);
@@ -361,14 +368,21 @@ forth_get_all_words(ForthInterp *interp)
                 return;
 
             case WORD_FUNC:
-                // pop the top of word.
+                ASSERT(interp, word->func != WORD_NULL_FUNC);
                 func = word->func;
+
+                d_printf("dispatch![%s]\n", word->tok_str.str);
 
                 word_destruct(word);
                 stack_pop(&(interp->word_stack));
 
-                ASSERT(interp, func != WORD_NULL_FUNC);
                 func(interp);
+
+                if (interp->errid != FORTH_ERR_NOERR) {
+                    forth_perror(interp, WORD_FUNC_STR);
+                    interp->errid = FORTH_ERR_NOERR;
+                    return;
+                }
 
                 break;
 
@@ -434,6 +448,8 @@ forth_regist_word(ForthInterp *interp, const char *tok_str, word_func_t func)
 void
 forth_eval_word(ForthInterp *interp, ForthWord *word)
 {
+    if (word->tok_str.str == NULL) return;
+
     if (word->type == WORD_DIGIT) {
         if (! word->digitval.is_set) {
             ASSERT(interp, word->tok_str.str != NULL);
@@ -446,6 +462,7 @@ forth_eval_word(ForthInterp *interp, ForthWord *word)
             }
 
             word_set_digit(word, d);
+            d_printf("eval: %s -> %f\n", word->tok_str.str, word->digitval.digit);
         }
     }
     else if (word->type == WORD_STRING) {
@@ -510,37 +527,39 @@ forth_eval_word(ForthInterp *interp, ForthWord *word)
 
 
 void
-forth_uneval_word(ForthInterp *interp, ForthWord *word, char *uneval, size_t max_size)
+forth_uneval_word(ForthInterp *interp, ForthWord *word)
 {
-    if (word->tok_str.str != NULL) {
-        strncpy(uneval, word->tok_str.str, max_size);
+    char tmp[interp->max_word_len];    // c99
+
+    if (word->tok_str.str != NULL) return;
+
+
+    if (word->type == WORD_DIGIT) {
+        ASSERT(interp, word->digitval.is_set);
+
+        if (! dtoa(word->digitval.digit, tmp, interp->max_word_len, 10))
+            forth_die(interp, "dtoa", FORTH_ERR_CONVERT_FAILED);
+
+        word_set_tok_str_copy(word, tmp);
+    }
+    else if (word->type == WORD_STRING) {
+        // TODO
+    }
+    else if (word->type == WORD_FUNC) {
+        forth_error(interp, "tried to convert word func to string.", FORTH_ERR_CONVERT_FAILED);
+
+        // no strict? (in Perl)
+        // word_set_str_copy(uneval, WORD_FUNC_STR);
+    }
+    else if (word->type == WORD_UNDEF) {
+        forth_error(interp, "tried to convert undefined word to string.", FORTH_ERR_CONVERT_FAILED);
+
+        // no strict? (in Perl)
+        // word_set_str_copy(uneval, WORD_FUNC_STR);
     }
     else {
-        if (word->type == WORD_DIGIT) {
-            ASSERT(interp, word->digitval.is_set);
-
-            if (! dtoa(word->digitval.digit, uneval, max_size, 10))
-                forth_die(interp, "dtoa", FORTH_ERR_CONVERT_FAILED);
-        }
-        else if (word->type == WORD_STRING) {
-            // TODO
-        }
-        else if (word->type == WORD_FUNC) {
-            forth_error(interp, "tried to convert word func to string.", FORTH_ERR_CONVERT_FAILED);
-
-            // no strict? (in Perl)
-            // word_set_str_copy(uneval, WORD_FUNC_STR);
-        }
-        else if (word->type == WORD_UNDEF) {
-            forth_error(interp, "tried to convert undefined word to string.", FORTH_ERR_CONVERT_FAILED);
-
-            // no strict? (in Perl)
-            // word_set_str_copy(uneval, WORD_FUNC_STR);
-        }
-        else {
-            // never reach this block
-            ASSERT(interp, 0);
-        }
+        // never reach this block
+        ASSERT(interp, 0);
     }
 }
 
@@ -582,12 +601,10 @@ forth_token2word(ForthInterp *interp, const char *token, ForthWord *word)
 {
     // identify token's type.
     word->type = forth_get_word_type(interp, token);
+    d_printf("word type: %d\n", word->type);
 
     // copy parsed string to tok_str.
     word_set_tok_str_copy(word, token);
-
-    // eval word->tok_str.
-    forth_eval_word(interp, word);
 
     // find token's func.
     if (word->type == WORD_FUNC) {

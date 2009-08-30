@@ -14,6 +14,35 @@
 #define WORD_FUNC_STR       "(function)"
 
 
+#define POP_CONV_DIGIT(interp, dval) \
+    do { \
+        if (AC_TOP_WORD(interp)->tok_str.str == NULL) { \
+            forth_uneval_word(interp, AC_TOP_WORD(interp)); \
+        } \
+        forth_eval_word(interp, AC_TOP_WORD(interp)); \
+        \
+        ASSERT(interp, AC_TOP_WORD(interp)->type == WORD_DIGIT); \
+        ASSERT(interp, AC_TOP_WORD(interp)->digitval.is_set); \
+        \
+        dval = AC_TOP_WORD(interp)->digitval.digit; \
+        \
+        d_printf("pop![%s]\n", AC_TOP_WORD(interp)->tok_str.str); \
+        word_destruct(AC_TOP_WORD(interp)); \
+        stack_pop(&(interp->word_stack)); \
+    } while (0)
+
+#define POP_CONV_SOME(interp, args, args_len, type) \
+    do { \
+        if (interp->word_stack.cur_pos + 1 < args_len) { \
+            interp->errid = FORTH_ERR_TOO_FEW_ARGS; \
+            return; \
+        } \
+        for (int i = args_len - 1; i >= 0; i--) { \
+            POP_CONV_ ## type(interp, args[i]); \
+        } \
+    } while (0)
+
+
 
 // forth's word
 enum word_type {
@@ -88,6 +117,15 @@ word_set_str_copy(ForthWord *word, const char *str);
 
 void
 word_set_digit(ForthWord *word, digit_t digit);
+
+
+/* utility functions */
+
+digit_t
+forth_word_pop_digit(ForthInterp *interp);
+
+void
+forth_word_pop_some(ForthInterp *interp, void *some, size_t max_some, word_type type);
 
 
 /* forth operator definitions */

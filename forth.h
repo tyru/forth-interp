@@ -40,6 +40,8 @@ enum forth_err_id {
     FORTH_ERR_CONVERT_FAILED,
     FORTH_ERR_ASSERT_FAILED,
     FORTH_ERR_NOT_FOUND_TOKEN,
+    FORTH_ERR_TOO_FEW_ARGS,
+    FORTH_ERR_NOT_IMPLEMENTED,
 };
 typedef enum forth_err_id forth_err_id;
 
@@ -139,7 +141,7 @@ void
 forth_eval_word(ForthInterp *interp, ForthWord *word);
 
 void
-forth_uneval_word(ForthInterp *interp, ForthWord *word, char *uneval, size_t max_size);
+forth_uneval_word(ForthInterp *interp, ForthWord *word);
 
 
 

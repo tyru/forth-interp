@@ -150,57 +150,88 @@ word_set_digit(ForthWord *word, digit_t digit)
 }
 
 
+
 /* forth operator definitions */
 
 void
 forth_word_plus(ForthInterp *interp)
 {
-    // assertions
-    ASSERT(interp, AC_TOP_WORD(interp)->type == WORD_DIGIT);
-    ASSERT(interp, AC_TOP_WORD(interp)->digitval.is_set);
-    // pop
-    digit_t n = AC_TOP_WORD(interp)->digitval.digit;
-    stack_pop(&(interp->word_stack));
+    digit_t args[2];
+    ForthWord word;
 
-    // assertions
-    ASSERT(interp, AC_TOP_WORD(interp)->type == WORD_DIGIT);
-    ASSERT(interp, AC_TOP_WORD(interp)->digitval.is_set);
     // pop
-    digit_t m = AC_TOP_WORD(interp)->digitval.digit;
-    stack_pop(&(interp->word_stack));
-
+    POP_CONV_SOME(interp, args, 2, DIGIT);
 
     // this is most important thing!
-    digit_t result = n + m;
-
-
-    ForthWord word;
-    word_init_with_digit(&word, result);
+    digit_t result = args[0] + args[1];
+    d_printf("%f + %f: result is %f\n", args[0], args[1], result);
 
     // push
+    word_init_with_digit(&word, result);
     stack_push(&(interp->word_stack), &word);
+
+    interp->errid = FORTH_ERR_NOERR;
 }
 
 
 void
 forth_word_minus(ForthInterp *interp)
 {
-    // TODO
-    UNUSED_ARG(interp);
+    digit_t args[2];
+    ForthWord word;
+
+    // pop
+    POP_CONV_SOME(interp, args, 2, DIGIT);
+
+    // this is most important thing!
+    digit_t result = args[0] - args[1];
+    d_printf("%f - %f: result is %f\n", args[0], args[1], result);
+
+    // push
+    word_init_with_digit(&word, result);
+    stack_push(&(interp->word_stack), &word);
+
+    interp->errid = FORTH_ERR_NOERR;
 }
 
 
 void
 forth_word_multiply(ForthInterp *interp)
 {
-    // TODO
-    UNUSED_ARG(interp);
+    digit_t args[2];
+    ForthWord word;
+
+    // pop
+    POP_CONV_SOME(interp, args, 2, DIGIT);
+
+    // this is most important thing!
+    digit_t result = args[0] * args[1];
+    d_printf("%f * %f: result is %f\n", args[0], args[1], result);
+
+    // push
+    word_init_with_digit(&word, result);
+    stack_push(&(interp->word_stack), &word);
+
+    interp->errid = FORTH_ERR_NOERR;
 }
 
 
 void
 forth_word_divide(ForthInterp *interp)
 {
-    // TODO
-    UNUSED_ARG(interp);
+    digit_t args[2];
+    ForthWord word;
+
+    // pop
+    POP_CONV_SOME(interp, args, 2, DIGIT);
+
+    // this is most important thing!
+    digit_t result = args[0] / args[1];
+    d_printf("%f / %f: result is %f\n", args[0], args[1], result);
+
+    // push
+    word_init_with_digit(&word, result);
+    stack_push(&(interp->word_stack), &word);
+
+    interp->errid = FORTH_ERR_NOERR;
 }
