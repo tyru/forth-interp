@@ -54,10 +54,6 @@ d_print(const char* msg);
 size_t
 strcount(const char *s, int c);
 
-// from http://d.hatena.ne.jp/p95095yy/20070205/1170688704
-char*
-strtok_r(char *str, const char *delim, char **saveptr);
-
 // almost code from 'man 3 strtol'.
 // if failed, *failed is not NULL.
 digit_t

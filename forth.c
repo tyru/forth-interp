@@ -194,28 +194,31 @@ void
 forth_run_src(ForthInterp *interp)
 {
     int i;
-    // copy original source code.
-    char orig_src[interp->src_len + 1];    // c99
-    strncpy(orig_src, interp->src, interp->src_len + 1);
-    // line
     char **lines;
 
 
     // allocate char** pointers.
-    size_t line_num = strcount(orig_src, '\n') + 1;
+    size_t line_num = strcount(interp->src, '\n') + 1;
     lines = alloca(line_num * sizeof(char*));
-    // allocate char* strings (interp->max_line_len bytes per line).
-    for (i = 0; (size_t)i < line_num; i++) {
-        lines[line_num] = alloca(interp->max_line_len);
-        memset(lines[line_num], 0, interp->max_line_len);
-    }
 
     // split each line into lines.
+    char *begin = interp->src;
+    char *end;
     i = 0;
-    char *saveptr;
-    lines[i++] = strtok_r(orig_src, "\n", &saveptr);    // this destroys orig_src.
-    while ((lines[i++] = strtok_r(NULL, "\n", &saveptr)) != NULL)
-        ;
+    while ((end = strchr(begin, '\n')) != NULL) {
+        lines[i] = alloca(end - begin + 1);
+        strncpy(lines[i], begin, end - begin);
+        lines[i][end - begin] = '\0';
+        // NOTE: assume newline is one byte.
+        begin = end + 1;
+        i++;
+    }
+    // NOTE: lines[i] may be allocated pointer.
+    // alloca() frees its pointer at the end of func, though.
+    lines[i] = NULL;
+
+    ASSERT(interp, CAST(size_t, i + 1) == line_num);
+
 
     // process each line.
     for (i = 0; lines[i] != NULL; i++) {

@@ -69,30 +69,6 @@ strcount(const char *s, int c)
 }
 
 
-// from http://d.hatena.ne.jp/p95095yy/20070205/1170688704
-char*
-strtok_r(char *str, const char *delim, char **saveptr)
-{
-    size_t width;
-    char   *head;
-
-    head = (NULL != str) ? str : *saveptr;
-    width = strcspn(head, delim);
-    if (0 == width) {
-        head += strspn(head, delim);
-        width = strcspn(head, delim);
-    }
-    if ('\0' == *head) {
-        return NULL;
-    }
-
-    *saveptr = head + width + strspn(head + width, delim);
-    *(head + width) = '\0';
-
-    return head;
-}
-
-
 // almost code from 'man 3 strtol'.
 // if failed, *failed is not NULL.
 digit_t
