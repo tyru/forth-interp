@@ -84,7 +84,6 @@ forth_regist_sighandler(ForthInterp *interp, void (*handler)(int))
 #endif
     };
     const int len = sizeof(signals) / sizeof(int);
-    d_printf("len is %d\n", len);
 
     for (int i = 0; i < len; i++) {
         if (sigaction(signals[i], &sa, NULL) != 0) {
