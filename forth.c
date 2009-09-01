@@ -2,20 +2,27 @@
  * forth.c - api of forth
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-30.
+ * Last Change: 2009-09-01.
  *
  */
 
 #include "forth.h"
 
+#include "constant.h"
+#include "digit.h"
+#include "token.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "parser.h"
+#include "util.h"
+#include "stack.h"
+
+
 #include <string.h>
-
 #include <unistd.h>
+
 #define _GNU_SOURCE
 #include <getopt.h>
+#undef _GNU_SOURCE
 
 #include <alloca.h>
 #include <ctype.h>
@@ -338,9 +345,17 @@ forth_error(ForthInterp *interp, const char *msg, forth_err_id id)
 void
 forth_perror(ForthInterp *interp, const char *msg)
 {
-    fprintf(stderr, "%s: ", msg);
+    if (msg != NULL)
+        fprintf(stderr, "%s: ", msg);
 
     switch (interp->errid) {
+        case FORTH_ERR_INIT:
+            fputs("failed to initialize interpreter struct...", stderr);
+            break;
+        case FORTH_ERR_SIG:
+            fputs("receive error signals...exit", stderr);
+            break;
+
         case FORTH_ERR_ARGS:
             fputs("arguments error", stderr);
             break;

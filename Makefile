@@ -3,11 +3,11 @@
 CC       = gcc
 LIBS     =
 INCLUDES =
-# CFLAGS   = $(INCLUDES) -Wall -W -pedantic -std=c99 -O2    # release build
-CFLAGS   = -DNDEBUG=1 $(INCLUDES) -g -Wall -W -pedantic -std=c99    # debug build
+# CFLAGS   = $(INCLUDES) -Wall -W -pedantic -std=gnu99 -O2    # release build
+CFLAGS   = -DNDEBUG=1 $(INCLUDES) -g -Wall -W -pedantic -std=gnu99    # debug build
 
 EXE      = myforth
-SRC      = main.c forth.c util.c stack.c parser.c word.c token.c digit.c
+SRC      = main.c forth.c util.c stack.c parser.c word.c token.c digit.c signal.c
 OBJS     = $(SRC:.c=.o)
 
 OBJS_NOMAIN = `for i in $(OBJS); do echo $$i; done | grep -v 'main\.o'`
@@ -64,42 +64,37 @@ clean:
 	\rm -f $(OBJS) $(EXE)
 # DO NOT DELETE
 
-main.o: forth.h type.h constant.h parser.h /usr/include/stdio.h
+main.o: forth.h type.h word.h digit.h /usr/include/stdlib.h
 main.o: /usr/include/features.h /usr/include/sys/cdefs.h
 main.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-main.o: /usr/include/gnu/stubs-32.h /usr/include/bits/types.h
-main.o: /usr/include/bits/typesizes.h /usr/include/libio.h
-main.o: /usr/include/_G_config.h /usr/include/wchar.h
-main.o: /usr/include/bits/wchar.h /usr/include/gconv.h
-main.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h token.h
-main.o: word.h digit.h /usr/include/stdlib.h /usr/include/sys/types.h
+main.o: /usr/include/gnu/stubs-32.h /usr/include/sys/types.h
+main.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
 main.o: /usr/include/time.h /usr/include/endian.h /usr/include/bits/endian.h
 main.o: /usr/include/sys/select.h /usr/include/bits/select.h
 main.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
 main.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-main.o: /usr/include/alloca.h stack.h util.h /usr/include/string.h
-forth.o: forth.h type.h constant.h parser.h /usr/include/stdio.h
+main.o: /usr/include/alloca.h stack.h /usr/include/stdio.h
+main.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
+main.o: /usr/include/bits/wchar.h /usr/include/gconv.h
+main.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
+main.o: signal.h util.h token.h /usr/include/string.h
+forth.o: forth.h type.h word.h digit.h /usr/include/stdlib.h
 forth.o: /usr/include/features.h /usr/include/sys/cdefs.h
 forth.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-forth.o: /usr/include/gnu/stubs-32.h /usr/include/bits/types.h
-forth.o: /usr/include/bits/typesizes.h /usr/include/libio.h
-forth.o: /usr/include/_G_config.h /usr/include/wchar.h
+forth.o: /usr/include/gnu/stubs-32.h /usr/include/sys/types.h
+forth.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
+forth.o: /usr/include/time.h /usr/include/endian.h /usr/include/bits/endian.h
+forth.o: /usr/include/sys/select.h /usr/include/bits/select.h
+forth.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
+forth.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
+forth.o: /usr/include/alloca.h stack.h /usr/include/stdio.h
+forth.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
 forth.o: /usr/include/bits/wchar.h /usr/include/gconv.h
 forth.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
-forth.o: token.h word.h digit.h /usr/include/stdlib.h
-forth.o: /usr/include/sys/types.h /usr/include/time.h /usr/include/endian.h
-forth.o: /usr/include/bits/endian.h /usr/include/sys/select.h
-forth.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
-forth.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
-forth.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h stack.h
-forth.o: util.h /usr/include/string.h /usr/include/unistd.h
-forth.o: /usr/include/bits/posix_opt.h /usr/include/bits/confname.h
-forth.o: /usr/include/getopt.h /usr/include/signal.h
-forth.o: /usr/include/bits/signum.h /usr/include/bits/siginfo.h
-forth.o: /usr/include/bits/sigaction.h /usr/include/bits/sigcontext.h
-forth.o: /usr/include/asm/sigcontext.h /usr/include/bits/sigstack.h
-forth.o: /usr/include/bits/sigthread.h /usr/include/ctype.h
-forth.o: /usr/include/errno.h /usr/include/bits/errno.h
+forth.o: constant.h token.h parser.h util.h /usr/include/string.h
+forth.o: /usr/include/unistd.h /usr/include/bits/posix_opt.h
+forth.o: /usr/include/bits/confname.h /usr/include/getopt.h
+forth.o: /usr/include/ctype.h /usr/include/errno.h /usr/include/bits/errno.h
 forth.o: /usr/include/linux/errno.h /usr/include/asm/errno.h
 forth.o: /usr/include/asm-generic/errno.h
 forth.o: /usr/include/asm-generic/errno-base.h
@@ -144,8 +139,7 @@ parser.o: /usr/include/bits/endian.h /usr/include/sys/select.h
 parser.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
 parser.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
 parser.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
-parser.o: /usr/include/string.h forth.h constant.h stack.h
-parser.o: /usr/include/ctype.h
+parser.o: /usr/include/string.h forth.h stack.h /usr/include/ctype.h
 word.o: word.h type.h digit.h /usr/include/stdlib.h /usr/include/features.h
 word.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
 word.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
@@ -156,10 +150,10 @@ word.o: /usr/include/sys/select.h /usr/include/bits/select.h
 word.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
 word.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
 word.o: /usr/include/alloca.h util.h token.h /usr/include/string.h forth.h
-word.o: constant.h parser.h /usr/include/stdio.h /usr/include/libio.h
+word.o: stack.h /usr/include/stdio.h /usr/include/libio.h
 word.o: /usr/include/_G_config.h /usr/include/wchar.h
 word.o: /usr/include/bits/wchar.h /usr/include/gconv.h
-word.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h stack.h
+word.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
 word.o: /usr/include/errno.h /usr/include/bits/errno.h
 word.o: /usr/include/linux/errno.h /usr/include/asm/errno.h
 word.o: /usr/include/asm-generic/errno.h
@@ -175,3 +169,17 @@ token.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
 token.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
 token.o: /usr/include/alloca.h /usr/include/string.h /usr/include/ctype.h
 digit.o: digit.h
+signal.o: signal.h type.h util.h token.h word.h digit.h /usr/include/stdlib.h
+signal.o: /usr/include/features.h /usr/include/sys/cdefs.h
+signal.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
+signal.o: /usr/include/gnu/stubs-32.h /usr/include/sys/types.h
+signal.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
+signal.o: /usr/include/time.h /usr/include/endian.h
+signal.o: /usr/include/bits/endian.h /usr/include/sys/select.h
+signal.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+signal.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+signal.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+signal.o: /usr/include/string.h forth.h stack.h /usr/include/stdio.h
+signal.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
+signal.o: /usr/include/bits/wchar.h /usr/include/gconv.h
+signal.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h

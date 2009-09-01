@@ -2,33 +2,32 @@
 #define FORTH_H
 
 #include "type.h"
-#include "constant.h"
 
-#include "parser.h"
-#include "token.h"
 #include "word.h"
-#include "digit.h"
-
 #include "stack.h"
-#include "util.h"
 
-
+// this header is included from many headers.
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 
 
 
 // forth's variables
-struct ForthVar {
-    char    *tok_str;
-    value_t value;
-};
-typedef struct ForthVar ForthVar;
+// struct ForthVar {
+//     char    *tok_str;
+//     value_t value;
+// };
+// typedef struct ForthVar ForthVar;
 
 
 // set these error id by forth api.
 enum forth_err_id {
     FORTH_ERR_NOERR = 0,
+
+    FORTH_ERR_INIT,
+    FORTH_ERR_SIG,
+
     FORTH_ERR_ARGS,
     FORTH_ERR_EOF,
     FORTH_ERR_ALLOC,
