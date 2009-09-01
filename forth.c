@@ -64,7 +64,8 @@ forth_init(ForthInterp *interp)
     forth_regist_word(interp, "/", forth_word_divide);
 
     /* initialize forth stacks (for ForthWord) */
-    stack_init(&(interp->word_stack), STACK_DFL_NUM, sizeof(ForthWord));
+    interp->word_stack = malloc(sizeof(ForthWord));
+    stack_init(interp->word_stack, STACK_DFL_NUM, sizeof(ForthWord));
 
     /* check that all pointers is NOT NULL, etc. */
     forth_init_check(interp);
@@ -78,7 +79,9 @@ forth_init_check(ForthInterp *interp)
         forth_die(interp, "forth_init", FORTH_ERR_ALLOC);
     if (interp->word_def == NULL)
         forth_die(interp, "forth_init", FORTH_ERR_ALLOC);
-    if (interp->word_stack.stack == NULL)
+    if (interp->word_stack == NULL)
+        forth_die(interp, "forth_init", FORTH_ERR_ALLOC);
+    if (interp->word_stack->stack == NULL)
         forth_die(interp, "forth_init", FORTH_ERR_ALLOC);
 }
 
@@ -90,10 +93,11 @@ forth_destruct(ForthInterp *interp)
     // free the (void*) addresses.
     while (AC_TOP_WORD(interp) != NULL) {
         word_destruct(AC_TOP_WORD(interp));
-        stack_pop(&(interp->word_stack));
+        stack_pop(interp->word_stack);
     }
     // free the pointer.
-    stack_destruct(&(interp->word_stack));
+    stack_destruct(interp->word_stack);
+    FREE(interp->word_stack);
 
     FREE(interp->src);
     FREE(interp->word_def);
@@ -193,7 +197,7 @@ forth_clear_stack(ForthInterp *interp)
         // forth_uneval_word(interp, AC_TOP_WORD(interp))
         d_printf("pop![%s]\n", AC_TOP_WORD(interp)->tok_str.str);
         word_destruct(AC_TOP_WORD(interp));
-        stack_pop(&(interp->word_stack));
+        stack_pop(interp->word_stack);
     }
 }
 
@@ -229,7 +233,7 @@ forth_run_src(ForthInterp *interp)
 
                 // pop the func word
                 word_destruct(word);
-                stack_pop(&(interp->word_stack));
+                stack_pop(interp->word_stack);
 
                 // dispatch!
                 func(interp);
@@ -439,7 +443,7 @@ forth_get_word(ForthInterp *interp)
         forth_token2word(interp, token, &word);
         // push it.
         d_printf("push![%s]\n", token);
-        stack_push(&(interp->word_stack), &word);
+        stack_push(interp->word_stack, &word);
     }
 
     // don't free pushed word! stack_push() copies only all bytes of struct.

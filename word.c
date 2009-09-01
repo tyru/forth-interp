@@ -2,14 +2,15 @@
  * word.c - forth operator definitions
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-30.
+ * Last Change: 2009-09-01.
  *
  */
 
 #include "word.h"
 
-#include "util.h"
 #include "forth.h"
+#include "util.h"
+#include "stack.h"
 
 #include <stdlib.h>
 #include <errno.h>
@@ -167,7 +168,7 @@ forth_word_plus(ForthInterp *interp)
 
     // push
     word_init_with_digit(&word, result);
-    stack_push(&(interp->word_stack), &word);
+    stack_push(interp->word_stack, &word);
 
     interp->errid = FORTH_ERR_NOERR;
 }
@@ -187,7 +188,7 @@ forth_word_minus(ForthInterp *interp)
 
     // push
     word_init_with_digit(&word, result);
-    stack_push(&(interp->word_stack), &word);
+    stack_push(interp->word_stack, &word);
 
     interp->errid = FORTH_ERR_NOERR;
 }
@@ -207,7 +208,7 @@ forth_word_multiply(ForthInterp *interp)
 
     // push
     word_init_with_digit(&word, result);
-    stack_push(&(interp->word_stack), &word);
+    stack_push(interp->word_stack, &word);
 
     interp->errid = FORTH_ERR_NOERR;
 }
@@ -227,7 +228,7 @@ forth_word_divide(ForthInterp *interp)
 
     // push
     word_init_with_digit(&word, result);
-    stack_push(&(interp->word_stack), &word);
+    stack_push(interp->word_stack, &word);
 
     interp->errid = FORTH_ERR_NOERR;
 }

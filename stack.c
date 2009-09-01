@@ -2,7 +2,7 @@
  * stack.c - stack implementation using heap (slow)
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-28.
+ * Last Change: 2009-09-01.
  *
  */
 
@@ -21,8 +21,7 @@
 stack_ret
 stack_init(ForthStack *stack, size_t size, size_t elem_size)
 {
-    // stack->stack = calloc(sizeof(void*), size);
-    stack->stack = CAST(void**, malloc(sizeof(void*) * size));
+    stack->stack = calloc(sizeof(void*), size);
     if (stack->stack == NULL) return STACK_ALLOC_ERROR;
 
     stack->top = NULL;

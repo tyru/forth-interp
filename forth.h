@@ -4,7 +4,6 @@
 #include "type.h"
 
 #include "word.h"
-#include "stack.h"
 
 // this header is included from many headers.
 #include <stdio.h>
@@ -58,7 +57,7 @@ struct ForthInterp {
     uint       max_word_len;    // allocated number of bytes each word
                                 //(default is SRC_MAX_WORDBYTE)
 
-    ForthStack word_stack;     // stack
+    ForthStack *word_stack;     // stack
 
     // TODO
     // manage words definitions with simple pair.

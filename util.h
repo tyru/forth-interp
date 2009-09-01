@@ -38,7 +38,7 @@
     } while (0)
 
 #define AC_TOP_WORD(interp) \
-    CAST(ForthWord*, (interp)->word_stack.top)
+    CAST(ForthWord*, (interp)->word_stack->top)
 
 
 

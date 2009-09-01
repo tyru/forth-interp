@@ -28,12 +28,12 @@
         \
         d_printf("pop![%s]\n", AC_TOP_WORD(interp)->tok_str.str); \
         word_destruct(AC_TOP_WORD(interp)); \
-        stack_pop(&(interp->word_stack)); \
+        stack_pop(interp->word_stack); \
     } while (0)
 
 #define POP_CONV_SOME(interp, args, args_len, type) \
     do { \
-        if (interp->word_stack.cur_pos + 1 < args_len) { \
+        if (interp->word_stack->cur_pos + 1 < args_len) { \
             interp->errid = FORTH_ERR_TOO_FEW_ARGS; \
             return; \
         } \
