@@ -349,6 +349,7 @@ forth_error(ForthInterp *interp, const char *msg, forth_err_id id)
 void
 forth_perror(ForthInterp *interp, const char *msg)
 {
+    fprintf(stderr, "error: ");
     if (msg != NULL)
         fprintf(stderr, "%s: ", msg);
 
@@ -357,7 +358,7 @@ forth_perror(ForthInterp *interp, const char *msg)
             fputs("failed to initialize interpreter struct...", stderr);
             break;
         case FORTH_ERR_SIG:
-            fputs("receive error signals...exit", stderr);
+            fputs("error signal was received...exit", stderr);
             break;
 
         case FORTH_ERR_ARGS:

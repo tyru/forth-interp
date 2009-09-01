@@ -23,7 +23,7 @@ static volatile ForthInterp *gl_interp;
 void
 destruct_interp(int signo)
 {
-    UNUSED_ARG(signo);
+    fprintf(stderr, "\n%s was received!\n", sig2str(signo));
     if (gl_interp != NULL)
         forth_die(CAST(ForthInterp*, gl_interp), NULL, FORTH_ERR_SIG);
 }
