@@ -73,8 +73,8 @@ main.o: /usr/include/time.h /usr/include/endian.h /usr/include/bits/endian.h
 main.o: /usr/include/sys/select.h /usr/include/bits/select.h
 main.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
 main.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-main.o: /usr/include/alloca.h stack.h /usr/include/stdio.h
-main.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
+main.o: /usr/include/alloca.h /usr/include/stdio.h /usr/include/libio.h
+main.o: /usr/include/_G_config.h /usr/include/wchar.h
 main.o: /usr/include/bits/wchar.h /usr/include/gconv.h
 main.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
 main.o: signal.h util.h token.h /usr/include/string.h
@@ -87,11 +87,11 @@ forth.o: /usr/include/time.h /usr/include/endian.h /usr/include/bits/endian.h
 forth.o: /usr/include/sys/select.h /usr/include/bits/select.h
 forth.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
 forth.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-forth.o: /usr/include/alloca.h stack.h /usr/include/stdio.h
-forth.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
+forth.o: /usr/include/alloca.h /usr/include/stdio.h /usr/include/libio.h
+forth.o: /usr/include/_G_config.h /usr/include/wchar.h
 forth.o: /usr/include/bits/wchar.h /usr/include/gconv.h
 forth.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
-forth.o: constant.h token.h parser.h util.h /usr/include/string.h
+forth.o: constant.h token.h parser.h util.h /usr/include/string.h stack.h
 forth.o: /usr/include/unistd.h /usr/include/bits/posix_opt.h
 forth.o: /usr/include/bits/confname.h /usr/include/getopt.h
 forth.o: /usr/include/ctype.h /usr/include/errno.h /usr/include/bits/errno.h
@@ -139,7 +139,7 @@ parser.o: /usr/include/bits/endian.h /usr/include/sys/select.h
 parser.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
 parser.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
 parser.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
-parser.o: /usr/include/string.h forth.h stack.h /usr/include/ctype.h
+parser.o: /usr/include/string.h forth.h /usr/include/ctype.h
 word.o: word.h type.h digit.h /usr/include/stdlib.h /usr/include/features.h
 word.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
 word.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
@@ -149,14 +149,13 @@ word.o: /usr/include/endian.h /usr/include/bits/endian.h
 word.o: /usr/include/sys/select.h /usr/include/bits/select.h
 word.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
 word.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-word.o: /usr/include/alloca.h util.h token.h /usr/include/string.h forth.h
-word.o: stack.h /usr/include/stdio.h /usr/include/libio.h
-word.o: /usr/include/_G_config.h /usr/include/wchar.h
+word.o: /usr/include/alloca.h forth.h /usr/include/stdio.h
+word.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
 word.o: /usr/include/bits/wchar.h /usr/include/gconv.h
-word.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
-word.o: /usr/include/errno.h /usr/include/bits/errno.h
-word.o: /usr/include/linux/errno.h /usr/include/asm/errno.h
-word.o: /usr/include/asm-generic/errno.h
+word.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h util.h
+word.o: token.h /usr/include/string.h stack.h /usr/include/errno.h
+word.o: /usr/include/bits/errno.h /usr/include/linux/errno.h
+word.o: /usr/include/asm/errno.h /usr/include/asm-generic/errno.h
 word.o: /usr/include/asm-generic/errno-base.h
 token.o: token.h type.h util.h word.h digit.h /usr/include/stdlib.h
 token.o: /usr/include/features.h /usr/include/sys/cdefs.h
@@ -179,7 +178,7 @@ signal.o: /usr/include/bits/endian.h /usr/include/sys/select.h
 signal.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
 signal.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
 signal.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
-signal.o: /usr/include/string.h forth.h stack.h /usr/include/stdio.h
+signal.o: /usr/include/string.h forth.h /usr/include/stdio.h
 signal.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
 signal.o: /usr/include/bits/wchar.h /usr/include/gconv.h
 signal.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
