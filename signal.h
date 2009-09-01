@@ -7,8 +7,5 @@
 void
 forth_regist_sighandler(ForthInterp *interp, void (*handler)(int));
 
-const char*
-sig2str(int signo);
-
 
 #endif /* SIGNAL_H */

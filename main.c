@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 
 
 
@@ -23,7 +24,7 @@ static volatile ForthInterp *gl_interp;
 void
 destruct_interp(int signo)
 {
-    fprintf(stderr, "\n%s was received!\n", sig2str(signo));
+    psignal(signo, NULL);
     if (gl_interp != NULL)
         forth_die(CAST(ForthInterp*, gl_interp), NULL, FORTH_ERR_SIG);
 }
