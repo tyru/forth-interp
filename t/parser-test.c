@@ -7,6 +7,7 @@
 #include "../parser.h"
 #include "../util.h"
 #include "../token.h"
+#include "../constant.h"
 
 #include <alloca.h>
 
