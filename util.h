@@ -63,5 +63,9 @@ atod(const char *digit_str, int base, char **failed);
 bool
 dtoa(digit_t digit, char *ascii, size_t max_size, int base);
 
+// convert token to word.
+void
+forth_token2word(ForthInterp *interp, const char *token, ForthWord *word);
+
 
 #endif /* UTIL_H */

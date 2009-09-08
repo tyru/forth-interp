@@ -2,7 +2,7 @@
  * util.c - functions which does NOT take 'ForthInterp' as arg 1
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-30.
+ * Last Change: 2009-09-09.
  *
  */
 
@@ -108,4 +108,27 @@ dtoa(digit_t digit, char *ascii, size_t max_size, int base)
 
     snprintf(ascii, max_size, "%f", digit);
     return true;
+}
+
+
+// convert token to word.
+void
+forth_token2word(ForthInterp *interp, const char *token, ForthWord *word)
+{
+    // identify token's type.
+    word->type = forth_get_word_type(interp, token);
+    d_printf("word type: %d\n", word->type);
+
+    // copy parsed string to tok_str.
+    word_set_tok_str_copy(word, token);
+
+    // find token's func.
+    if (word->type == WORD_FUNC) {
+        ForthWord *w = forth_get_word_def(interp, token);
+        if (w == NULL) return;
+        word->func = w->func;
+    }
+    else {
+        word->func = WORD_NULL_FUNC;
+    }
 }

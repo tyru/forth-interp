@@ -2,7 +2,7 @@
  * parser.c - parser
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-30.
+ * Last Change: 2009-09-09.
  *
  */
 
@@ -10,6 +10,7 @@
 
 #include "util.h"
 #include "forth.h"    // accessing to interp, must know full structure of ForthInterp.
+#include "stack.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -202,4 +203,38 @@ FORTH_ERR_OVERFLOW:
     /* NOTREACHED */
 
     return false;
+}
+
+
+// get token, convert it, push it to interp->word.
+bool
+forth_get_word(ForthInterp *interp)
+{
+    char token[interp->max_word_len];    // c99
+    ForthWord word;
+
+    word_init(&word);
+
+    // parse interp->src
+    // NOTE: token will be allocated.
+    bool success = forth_get_token_from_src(interp, token, interp->max_word_len);
+
+    if (success) {
+        d_printf("read [%s].\n", token);
+        // convert: char* -> ForthWord
+        forth_token2word(interp, token, &word);
+        // push it.
+        d_printf("push![%s]\n", token);
+        stack_push(interp->word_stack, &word);
+    }
+
+    // don't free pushed word! stack_push() copies only all bytes of struct.
+    // word_destruct(&word);
+
+    // to trap EOF outside of this function,
+    // this func must return this value.
+    // (do not die in this func!)
+    return success;
+
+    // 'word' at stack area is free()d but copied to interp->word_stack.
 }

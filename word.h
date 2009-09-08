@@ -86,7 +86,7 @@ typedef struct word_value_t word_value_t;
 
 
 
-/* api */
+/* word api */
 
 void
 word_init(ForthWord *word);
@@ -119,16 +119,34 @@ void
 word_set_digit(ForthWord *word, digit_t digit);
 
 
-/* utility functions */
-
-digit_t
-forth_word_pop_digit(ForthInterp *interp);
+/* forth word api */
 
 void
-forth_word_pop_some(ForthInterp *interp, void *some, size_t max_some, word_type type);
+forth_init_word(ForthInterp *interp);
+
+// NOTE: copy the address of tok_str.
+void
+forth_regist_word(ForthInterp *interp, const char *tok_str, word_func_t func);
+
+char*
+forth_word_as_str(ForthInterp *interp, ForthWord *word);
+
+// evaluate word->tok_str.
+// NOTE: word->type and word->tok_str must be set.
+void
+forth_eval_word(ForthInterp *interp, ForthWord *word);
+
+void
+forth_uneval_word(ForthInterp *interp, ForthWord *word);
+
+word_type
+forth_get_word_type(ForthInterp *interp, const char *token);
+
+ForthWord*
+forth_get_word_def(ForthInterp *interp, const char *token);
 
 
-/* forth operator definitions */
+/* word functions */
 
 void
 forth_word_plus(ForthInterp *interp);

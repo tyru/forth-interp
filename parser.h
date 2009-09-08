@@ -38,6 +38,9 @@
 bool
 forth_get_token_from_src(ForthInterp *interp, char *token, size_t max_size);
 
+// get token, convert it, push it to interp->word.
+bool
+forth_get_word(ForthInterp *interp);
 
 
 #endif /* PARSER_H */

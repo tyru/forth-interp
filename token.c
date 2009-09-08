@@ -2,7 +2,7 @@
  * token.c - forth's tokens
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-08-30.
+ * Last Change: 2009-09-09.
  *
  */
 

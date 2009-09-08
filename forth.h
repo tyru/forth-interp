@@ -12,13 +12,6 @@
 
 
 
-// forth's variables
-// struct ForthVar {
-//     char    *tok_str;
-//     value_t value;
-// };
-// typedef struct ForthVar ForthVar;
-
 
 // set these error id by forth api.
 enum forth_err_id {
@@ -60,11 +53,11 @@ struct ForthInterp {
     ForthStack *word_stack;     // stack
 
     // TODO
-    // manage words definitions with simple pair.
+    // manage words definitions with simple map.
     ForthWord  *word_def;       // forth's word definitions
     uint       word_pos;
 
-    // ForthVar   *vars;
+    ForthWord  *vars;
 
     int        errid;           // error id set by api
 };
@@ -109,6 +102,9 @@ forth_malloc(ForthInterp *interp, size_t size);
 
 void
 forth_die(ForthInterp *interp, const char *msg, forth_err_id id);
+
+void
+forth_error(ForthInterp *interp, const char *msg, forth_err_id id);
 
 void
 forth_perror(ForthInterp *interp, const char *msg);

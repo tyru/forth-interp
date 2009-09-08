@@ -4,7 +4,6 @@
 
 
 typedef unsigned int uint;
-typedef int value_t;
 
 struct ForthInterp;
 typedef struct ForthInterp ForthInterp;
