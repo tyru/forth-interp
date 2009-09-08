@@ -212,7 +212,7 @@ forth_eval_word(ForthInterp *interp, ForthWord *word)
             }
 
             word_set_digit(word, d);
-            d_printf("eval: %s -> %f\n", word->tok_str.str, word->digitval.digit);
+            forth_debugf(interp, "eval: %s -> %f\n", word->tok_str.str, word->digitval.digit);
         }
     }
     else if (word->type == WORD_STRING) {

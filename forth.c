@@ -28,6 +28,8 @@
 #include <ctype.h>
 #include <errno.h>
 
+#include <stdarg.h>
+
 
 
 /* api */
@@ -43,6 +45,7 @@ forth_init(ForthInterp *interp)
     interp->max_word_len = SRC_DFL_WORDBYTE;
     interp->src_len = 0;
     interp->cur_pos = 0;
+    interp->debug = false;
 
     /* initialize error variables */
     interp->errid = FORTH_ERR_NOERR;
@@ -99,20 +102,24 @@ void
 forth_getopt(ForthInterp *interp, int *argc, char **argv)
 {
     static const struct option long_opts[] = {
-        {"help", 0, NULL, 'h'}
+        {"help", 0, NULL, 'h'},
+        {"debug", 0, NULL, 'd'},
     };
     int opt_index = 0;
     int c;
 
-    while ((c = getopt_long(*argc, argv, "h", long_opts, &opt_index)) != -1) {
+    while ((c = getopt_long(*argc, argv, "hd", long_opts, &opt_index)) != -1) {
         switch (c) {
             case 'h':
                 puts("May the forth be with you.");
                 forth_exit(interp, EXIT_SUCCESS);
-                /* NOTREACHED */
+                break;
+            case 'd':
+                interp->debug = true;
+                break;
 
             case '?':
-                forth_die(interp, "getopt_long", -1);
+                forth_exit(interp, EXIT_FAILURE);
         }
     }
 }
@@ -186,7 +193,7 @@ forth_clear_stack(ForthInterp *interp)
 {
     while (AC_TOP_WORD(interp) != NULL) {
         // forth_uneval_word(interp, AC_TOP_WORD(interp))
-        d_printf("pop![%s]\n", AC_TOP_WORD(interp)->tok_str.str);
+        forth_debugf(interp, "pop![%s]\n", AC_TOP_WORD(interp)->tok_str.str);
         word_destruct(AC_TOP_WORD(interp));
         stack_pop(interp->word_stack);
     }
@@ -220,7 +227,7 @@ forth_run_src(ForthInterp *interp)
             case WORD_FUNC:
                 ASSERT(interp, word->func != WORD_NULL_FUNC);
                 func = word->func;
-                d_printf("dispatch![%s]\n", word->tok_str.str);
+                forth_debugf(interp, "dispatch![%s]\n", word->tok_str.str);
 
                 // pop the func word
                 word_destruct(word);
@@ -289,12 +296,12 @@ forth_run_src_each_line(ForthInterp *interp)
         // set source which doesn't contain newline.
         size_t len = strlen(lines[i]);
         strncpy(interp->src, lines[i], len + 1);
-        d_printf("[%s] - eval begin.\n", interp->src);
+        forth_debugf(interp, "[%s] - eval begin.\n", interp->src);
 
         // get words as possible.
         forth_run_src(interp);
 
-        d_printf("[%s] - eval end.\n", interp->src);
+        forth_debugf(interp, "[%s] - eval end.\n", interp->src);
 
         // pop all stacks.
         forth_clear_stack(interp);
@@ -413,6 +420,32 @@ bool
 forth_src_eof(ForthInterp *interp)
 {
     return interp->cur_pos > interp->src_len;
+}
+
+
+int
+forth_debugf(ForthInterp *interp, const char* format, ...)
+{
+    va_list ap;
+    int result;
+
+    if (! interp->debug) return 1;
+    fputs("[debug]::", stderr);
+
+    va_start(ap, format);
+    result = vprintf(format, ap);
+    va_end(ap);
+
+    return result;
+}
+
+int
+forth_debug(ForthInterp *interp, const char* msg)
+{
+    if (! interp->debug) return 1;
+    fputs("[debug]::", stderr);
+    fputs(msg, stderr);
+    return 1;
 }
 
 

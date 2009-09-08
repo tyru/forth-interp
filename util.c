@@ -8,6 +8,7 @@
 
 #include "util.h"
 
+#include "forth.h"
 #include "word.h"
 #include "token.h"
 
@@ -19,39 +20,6 @@
 #include <errno.h>
 
 
-
-int
-d_printf(const char* format, ...)
-{
-#if NDEBUG
-    va_list ap;
-    int result;
-
-    fputs("[debug]::", stderr);
-
-    va_start(ap, format);
-    result = vprintf(format, ap);
-    va_end(ap);
-
-    return result;
-#else
-    UNUSED_ARG(format);
-    return 1;
-#endif
-}
-
-int
-d_print(const char* msg)
-{
-#if NDEBUG
-    fputs("[debug]::", stderr);
-    fputs(msg, stdout);
-    return 1;
-#else
-    UNUSED_ARG(msg);
-    return 1;
-#endif
-}
 
 
 // count c in s.
@@ -117,7 +85,7 @@ forth_token2word(ForthInterp *interp, const char *token, ForthWord *word)
 {
     // identify token's type.
     word->type = forth_get_word_type(interp, token);
-    d_printf("word type: %d\n", word->type);
+    forth_debugf(interp, "word type: %d\n", word->type);
 
     // copy parsed string to tok_str.
     word_set_tok_str_copy(word, token);

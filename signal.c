@@ -79,7 +79,7 @@ forth_regist_sighandler(ForthInterp *interp, void (*handler)(int))
     for (int i = 0; i < len; i++) {
         if (sigaction(signals[i], &sa, NULL) != 0) {
             // failed to register
-            d_printf("failed to register signal: %d: ", signals[i]);
+            forth_debugf(interp, "failed to register signal: %d: ", signals[i]);
             forth_die(interp, "sigaction", FORTH_ERR_INIT);
         }
     }

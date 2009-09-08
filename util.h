@@ -44,12 +44,6 @@
 
 /* util functions */
 
-int
-d_printf(const char* format, ...);
-
-int
-d_print(const char* msg);
-
 // count c in s.
 size_t
 strcount(const char *s, int c);

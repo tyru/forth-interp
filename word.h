@@ -26,7 +26,7 @@
         \
         dval = AC_TOP_WORD(interp)->digitval.digit; \
         \
-        d_printf("pop![%s]\n", AC_TOP_WORD(interp)->tok_str.str); \
+        forth_debugf(interp, "pop![%s]\n", AC_TOP_WORD(interp)->tok_str.str); \
         word_destruct(AC_TOP_WORD(interp)); \
         stack_pop(interp->word_stack); \
     } while (0)

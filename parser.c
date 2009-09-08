@@ -96,7 +96,7 @@ forth_get_token_from_src(
                 return false;
             }
 
-            d_printf("string token found: %s\n", token);
+            forth_debugf(interp, "string token found: %s\n", token);
             found = true;
 
             goto END_PARSING;
@@ -131,7 +131,7 @@ forth_get_token_from_src(
                 return false;
             }
 
-            d_printf("digit token found: %s\n", token);
+            forth_debugf(interp, "digit token found: %s\n", token);
             found = true;
             goto END_PARSING;
         }
@@ -161,7 +161,7 @@ forth_get_token_from_src(
 
             // no checking.
 
-            d_printf("undefined token found: %s\n", token);
+            forth_debugf(interp, "undefined token found: %s\n", token);
             found = true;
             goto END_PARSING;
         }
@@ -220,11 +220,11 @@ forth_get_word(ForthInterp *interp)
     bool success = forth_get_token_from_src(interp, token, interp->max_word_len);
 
     if (success) {
-        d_printf("read [%s].\n", token);
+        forth_debugf(interp, "read [%s].\n", token);
         // convert: char* -> ForthWord
         forth_token2word(interp, token, &word);
         // push it.
-        d_printf("push![%s]\n", token);
+        forth_debugf(interp, "push![%s]\n", token);
         stack_push(interp->word_stack, &word);
     }
 
