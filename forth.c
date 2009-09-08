@@ -154,7 +154,10 @@ forth_repl(ForthInterp *interp)
         // set linebuf as source code.
         forth_set_src(interp, linebuf);
         // execute.
-        forth_run_src(interp);
+        if (forth_run_src(interp))
+            puts("ok.");
+        else
+            forth_perror(interp, "forth_run_src");
     }
 }
 
@@ -201,7 +204,7 @@ forth_clear_stack(ForthInterp *interp)
 
 
 // get words and dispatch if that is WORD_FUNC.
-void
+bool
 forth_run_src(ForthInterp *interp)
 {
     while (1) {
@@ -222,7 +225,8 @@ forth_run_src(ForthInterp *interp)
                 fprintf(stderr,
                         "%s: unknown token\n",
                         word->tok_str.str);
-                return;
+                interp->errid = FORTH_ERR_BAD_TOKEN;
+                return false;
 
             case WORD_FUNC:
                 ASSERT(interp, word->func != WORD_NULL_FUNC);
@@ -237,9 +241,7 @@ forth_run_src(ForthInterp *interp)
                 func(interp);
                 // error check
                 if (interp->errid != FORTH_ERR_NOERR) {
-                    forth_perror(interp, WORD_FUNC_STR);
-                    interp->errid = FORTH_ERR_NOERR;
-                    return;
+                    return false;
                 }
 
                 break;
@@ -250,14 +252,12 @@ forth_run_src(ForthInterp *interp)
         }
     }
 
-    // show result
-    if (AC_TOP_WORD(interp) != NULL) {
-        printf("result was [%s]\n",
+    if (AC_TOP_WORD(interp) != NULL && interp->debug) {
+        forth_debugf(interp, "top stack was [%s]\n",
                 forth_word_as_str(interp, AC_TOP_WORD(interp)));
     }
-    else {
-        puts("no result.");
-    }
+
+    return true;
 }
 
 
@@ -376,11 +376,17 @@ forth_perror(ForthInterp *interp, const char *msg)
         case FORTH_ERR_STACK_OVERFLOW:
             fputs("forth's stack overflow error", stderr);
             break;
+        case FORTH_ERR_BAD_TOKEN:
+            fputs("malformed token found", stderr);
+            break;
+        case FORTH_ERR_UNCLOSED_STR:
+            fputs("unclosed string found", stderr);
+            break;
         case FORTH_ERR_BAD_STRING:
-            fputs("malformed string", stderr);
+            fputs("malformed string found", stderr);
             break;
         case FORTH_ERR_BAD_DIGIT:
-            fputs("malformed digit", stderr);
+            fputs("malformed digit found", stderr);
             break;
         case FORTH_ERR_CONVERT_FAILED:
             fputs("can't convert something to other types", stderr);

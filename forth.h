@@ -25,6 +25,7 @@ enum forth_err_id {
     FORTH_ERR_ALLOC,
     FORTH_ERR_OVERFLOW,
     FORTH_ERR_STACK_OVERFLOW,
+    FORTH_ERR_BAD_TOKEN,
     FORTH_ERR_UNCLOSED_STR,
     FORTH_ERR_BAD_STRING,
     FORTH_ERR_BAD_DIGIT,
@@ -93,7 +94,7 @@ void
 forth_clear_stack(ForthInterp *interp);
 
 // get words and dispatch if that is WORD_FUNC.
-void
+bool
 forth_run_src(ForthInterp *interp);
 
 void
