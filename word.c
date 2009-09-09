@@ -375,38 +375,47 @@ forth_get_word_def(ForthInterp *interp, const char *token)
 
 /* utility functions for word functions */
 
-void
+bool
 forth_pop_word(ForthInterp *interp, ForthWord *word)
 {
     ForthWord *top = AC_TOP_WORD(interp);
+    if (top == NULL) {
+        interp->errid = FORTH_ERR_STACK_UNDERFLOW;
+        return false;
+    }
 
-    // copy to word
-    word_init_with_word(word, top);
+    if (word != NULL) {
+        // copy to word
+        word_init_with_word(word, top);
+    }
 
     if (top->tok_str.str != NULL) {
         forth_debugf(interp, "pop![%s]\n", top->tok_str.str);
     } else {
         forth_debug(interp, "pop!\n");
     }
+
     // pop
     word_destruct(top);
-    stack_pop(interp->word_stack);
+    return stack_pop(interp->word_stack) == STACK_SUCCESS;
 }
 
 
 // - convert tok_str to digit.
 // - check the top word's type.
-void
+bool
 forth_pop_str(ForthInterp *interp, char *str)
 {
-    if (str == NULL)
-        forth_die(interp, "forth_pop_digit", FORTH_ERR_ARGS);
-
     ForthWord *top = AC_TOP_WORD(interp);
+    if (top == NULL) {
+        interp->errid = FORTH_ERR_STACK_UNDERFLOW;
+        return false;
+    }
 
     // die if not string.
     if (top->type != WORD_STRING) {
-        forth_die(interp, "forth_pop_str", FORTH_ERR_UNEXPECTED_TYPE);
+        interp->errid = FORTH_ERR_UNEXPECTED_TYPE;
+        return false;
     }
     if (top->strval.str == NULL) {
         if (top->tok_str.str == NULL) {
@@ -415,13 +424,15 @@ forth_pop_str(ForthInterp *interp, char *str)
         forth_eval_word(interp, top);
     }
 
-    forth_pop_str_fast(interp, str);
+    return forth_pop_str_fast(interp, str);
 }
 
 
 // faster than forth_pop_word(). do not check the top word's type.
-// NOTE: strval must be set.
-void
+// NOTE:
+// - strval must be set.
+// - do not check if stack num and type are ok.
+bool
 forth_pop_str_fast(ForthInterp *interp, char *str)
 {
     ForthWord *top = AC_TOP_WORD(interp);
@@ -434,25 +445,28 @@ forth_pop_str_fast(ForthInterp *interp, char *str)
     } else {
         forth_debug(interp, "pop!\n");
     }
+
     // pop
     word_destruct(top);
-    stack_pop(interp->word_stack);
+    return stack_pop(interp->word_stack) == STACK_SUCCESS;
 }
 
 
 // - convert tok_str to digit.
 // - check the top word's type.
-void
+bool
 forth_pop_digit(ForthInterp *interp, digit_t *digit)
 {
-    if (digit == NULL)
-        forth_die(interp, "forth_pop_digit", FORTH_ERR_ARGS);
-
     ForthWord *top = AC_TOP_WORD(interp);
+    if (top == NULL) {
+        interp->errid = FORTH_ERR_STACK_UNDERFLOW;
+        return false;
+    }
 
     // die if not digit.
     if (top->type != WORD_DIGIT) {
-        forth_die(interp, "forth_pop_digit", FORTH_ERR_UNEXPECTED_TYPE);
+        interp->errid = FORTH_ERR_UNEXPECTED_TYPE;
+        return false;
     }
     // convert if digit is not set.
     if (! top->digitval.is_set) {
@@ -462,13 +476,15 @@ forth_pop_digit(ForthInterp *interp, digit_t *digit)
         forth_eval_word(interp, top);
     }
 
-    forth_pop_digit_fast(interp, digit);
+    return forth_pop_digit_fast(interp, digit);
 }
 
 
 // faster than forth_pop_word(). do not check the top word's type.
-// NOTE: digitval must be set.
-void
+// NOTE:
+// - digitval must be set.
+// - do not check if stack num and type are ok.
+bool
 forth_pop_digit_fast(ForthInterp *interp, digit_t *digit)
 {
     ForthWord *top = AC_TOP_WORD(interp);
@@ -481,8 +497,9 @@ forth_pop_digit_fast(ForthInterp *interp, digit_t *digit)
     } else {
         forth_debug(interp, "pop!\n");
     }
+
     // pop
     word_destruct(top);
-    stack_pop(interp->word_stack);
+    return stack_pop(interp->word_stack) == STACK_SUCCESS;
 }
 

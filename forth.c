@@ -84,11 +84,8 @@ forth_init_check(ForthInterp *interp)
 void
 forth_destruct(ForthInterp *interp)
 {
-    // free the (void*) addresses.
-    while (AC_TOP_WORD(interp) != NULL) {
-        word_destruct(AC_TOP_WORD(interp));
-        stack_pop(interp->word_stack);
-    }
+    // free the all stack.
+    forth_clear_stack(interp);
     // free the pointer.
     stack_destruct(interp->word_stack);
     FREE(interp->word_stack);
@@ -154,7 +151,7 @@ forth_repl(ForthInterp *interp)
         // set linebuf as source code.
         forth_set_src(interp, linebuf);
         // execute.
-        if (forth_run_src(interp))
+        if (forth_run_src(interp) && interp->errid == FORTH_ERR_NOERR)
             puts("\nok.");
         else
             forth_perror(interp, "forth_run_src");
@@ -197,8 +194,7 @@ forth_clear_stack(ForthInterp *interp)
     while (AC_TOP_WORD(interp) != NULL) {
         // forth_uneval_word(interp, AC_TOP_WORD(interp))
         forth_debugf(interp, "pop![%s]\n", AC_TOP_WORD(interp)->tok_str.str);
-        word_destruct(AC_TOP_WORD(interp));
-        stack_pop(interp->word_stack);
+        forth_pop_word(interp, NULL);
     }
 }
 
@@ -209,8 +205,10 @@ forth_run_src(ForthInterp *interp)
 {
     while (1) {
         bool success = forth_get_word(interp);    // get and push the word.
-        if (interp->errid == FORTH_ERR_EOF)    // eof
+        if (interp->errid == FORTH_ERR_EOF) {    // eof
+            interp->errid = FORTH_ERR_NOERR;
             break;
+        }
         if (! success)    // other error
             forth_die(interp, "forth_get_word", -1);
 
@@ -234,8 +232,7 @@ forth_run_src(ForthInterp *interp)
                 forth_debugf(interp, "dispatch![%s]\n", word->tok_str.str);
 
                 // pop the func word
-                word_destruct(word);
-                stack_pop(interp->word_stack);
+                forth_pop_word(interp, NULL);
 
                 // dispatch!
                 func(interp);
@@ -378,6 +375,9 @@ forth_perror(ForthInterp *interp, const char *msg)
             break;
         case FORTH_ERR_OVERFLOW:
             fputs("overflow error", stderr);
+            break;
+        case FORTH_ERR_STACK_UNDERFLOW:
+            fputs("underflow error", stderr);
             break;
         case FORTH_ERR_STACK_OVERFLOW:
             fputs("forth's stack overflow error", stderr);

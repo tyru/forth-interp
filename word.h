@@ -119,25 +119,25 @@ forth_get_word_def(ForthInterp *interp, const char *token);
 
 /* utility functions for word functions */
 
-void
+bool
 forth_pop_word(ForthInterp *interp, ForthWord *word);
 
 // faster than forth_pop_word(), and check the top word's type.
-void
+bool
 forth_pop_str(ForthInterp *interp, char *str);
 
 // faster than forth_pop_word(). do not check the top word's type.
 // NOTE: strval must be set.
-void
+bool
 forth_pop_str_fast(ForthInterp *interp, char *str);
 
 // faster than forth_pop_word(), and check the top word's type.
-void
+bool
 forth_pop_digit(ForthInterp *interp, digit_t *digit);
 
 // faster than forth_pop_word(). do not check the top word's type.
 // NOTE: digitval must be set.
-void
+bool
 forth_pop_digit_fast(ForthInterp *interp, digit_t *digit);
 
 
