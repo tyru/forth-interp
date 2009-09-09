@@ -107,6 +107,9 @@ void*
 forth_malloc(ForthInterp *interp, size_t size);
 
 void
+forth_warning(ForthInterp *interp, const char *msg, forth_err_id id);
+
+void
 forth_die(ForthInterp *interp, const char *msg, forth_err_id id);
 
 void

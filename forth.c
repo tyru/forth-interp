@@ -192,8 +192,6 @@ void
 forth_clear_stack(ForthInterp *interp)
 {
     while (AC_TOP_WORD(interp) != NULL) {
-        // forth_uneval_word(interp, AC_TOP_WORD(interp))
-        forth_debugf(interp, "pop![%s]\n", AC_TOP_WORD(interp)->tokstr.str);
         forth_pop_word(interp, NULL);
     }
 }
@@ -280,18 +278,28 @@ forth_malloc(ForthInterp *interp, size_t size)
 void
 forth_die(ForthInterp *interp, const char *msg, forth_err_id id)
 {
-    if ((int)id != -1) interp->errid = id;
+    if (CAST(int, id) != -1) interp->errid = id;
     forth_perror(interp, msg);
     forth_exit(interp, EXIT_FAILURE);
 }
 
 
-// raise error and die.
+// show warning message and do not die.
+void
+forth_warning(ForthInterp *interp, const char *msg, forth_err_id id)
+{
+    if (CAST(int, id) != -1) interp->errid = id;
+    fprintf(stderr, "[warning]:: %s\n", msg);
+    forth_perror(interp, NULL);
+}
+
+
+// show error message and die.
 void
 forth_error(ForthInterp *interp, const char *msg, forth_err_id id)
 {
     fprintf(stderr, "[error]:: %s\n", msg);
-    forth_die(interp, "forth_error", id);
+    forth_die(interp, NULL, id);
 }
 
 
