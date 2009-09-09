@@ -14,35 +14,6 @@
 #define WORD_FUNC_STR       "(function)"
 
 
-#define POP_CONV_DIGIT(interp, dval) \
-    do { \
-        if (AC_TOP_WORD(interp)->tok_str.str == NULL) { \
-            forth_uneval_word(interp, AC_TOP_WORD(interp)); \
-        } \
-        forth_eval_word(interp, AC_TOP_WORD(interp)); \
-        \
-        ASSERT(interp, AC_TOP_WORD(interp)->type == WORD_DIGIT); \
-        ASSERT(interp, AC_TOP_WORD(interp)->digitval.is_set); \
-        \
-        dval = AC_TOP_WORD(interp)->digitval.digit; \
-        \
-        forth_debugf(interp, "pop![%s]\n", AC_TOP_WORD(interp)->tok_str.str); \
-        word_destruct(AC_TOP_WORD(interp)); \
-        stack_pop(interp->word_stack); \
-    } while (0)
-
-#define POP_CONV_SOME(interp, args, args_len, type) \
-    do { \
-        if (interp->word_stack->cur_pos + 1 < args_len) { \
-            interp->errid = FORTH_ERR_TOO_FEW_ARGS; \
-            return; \
-        } \
-        for (int i = args_len - 1; i >= 0; i--) { \
-            POP_CONV_ ## type(interp, args[i]); \
-        } \
-    } while (0)
-
-
 
 // forth's word
 enum word_type {
@@ -129,7 +100,7 @@ void
 forth_regist_word(ForthInterp *interp, const char *tok_str, word_func_t func);
 
 char*
-forth_word_as_str(ForthInterp *interp, ForthWord *word);
+forth_word_as_tok_str(ForthInterp *interp, ForthWord *word);
 
 // evaluate word->tok_str.
 // NOTE: word->type and word->tok_str must be set.
@@ -146,19 +117,28 @@ ForthWord*
 forth_get_word_def(ForthInterp *interp, const char *token);
 
 
-/* word functions */
+/* utility functions for word functions */
 
 void
-forth_word_plus(ForthInterp *interp);
+forth_pop_word(ForthInterp *interp, ForthWord *word);
 
+// faster than forth_pop_word(), and check the top word's type.
 void
-forth_word_minus(ForthInterp *interp);
+forth_pop_str(ForthInterp *interp, char *str);
 
+// faster than forth_pop_word(). do not check the top word's type.
+// NOTE: strval must be set.
 void
-forth_word_multiply(ForthInterp *interp);
+forth_pop_str_fast(ForthInterp *interp, char *str);
 
+// faster than forth_pop_word(), and check the top word's type.
 void
-forth_word_divide(ForthInterp *interp);
+forth_pop_digit(ForthInterp *interp, digit_t *digit);
+
+// faster than forth_pop_word(). do not check the top word's type.
+// NOTE: digitval must be set.
+void
+forth_pop_digit_fast(ForthInterp *interp, digit_t *digit);
 
 
 #endif /* WORD_H */

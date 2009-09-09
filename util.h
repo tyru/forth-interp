@@ -17,10 +17,9 @@
 #define DEREF(type, ptr)            (*(type*)(ptr))
 #define CAST(type, val)             ((type)(val))
 
-#define STREQ(s1, s2) \
-    (*(s1) == *(s2) && strcmp((s1), (s2)) == 0)
 
-// NOTE: FREE() makes code spam-ish.
+#define ALLOCATED(ptr) ((ptr) != NULL && errno != ENOMEM)
+
 #define FREE(ptr) \
     do { \
         if ((ptr) != NULL) { \
@@ -37,12 +36,20 @@
         } \
     } while (0)
 
+
+#define STREQ(s1, s2) \
+    (*(s1) == *(s2) && strcmp((s1), (s2)) == 0)
+
+
 #define AC_TOP_WORD(interp) \
     CAST(ForthWord*, (interp)->word_stack->top)
 
 
 
 /* util functions */
+
+int
+d_print(const char *fmg, ...);
 
 // count c in s.
 size_t

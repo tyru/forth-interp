@@ -155,7 +155,7 @@ forth_repl(ForthInterp *interp)
         forth_set_src(interp, linebuf);
         // execute.
         if (forth_run_src(interp))
-            puts("ok.");
+            puts("\nok.");
         else
             forth_perror(interp, "forth_run_src");
     }
@@ -254,7 +254,7 @@ forth_run_src(ForthInterp *interp)
 
     if (AC_TOP_WORD(interp) != NULL && interp->debug) {
         forth_debugf(interp, "top stack was [%s]\n",
-                forth_word_as_str(interp, AC_TOP_WORD(interp)));
+                forth_word_as_tok_str(interp, AC_TOP_WORD(interp)));
     }
 
     return true;
@@ -354,13 +354,19 @@ forth_perror(ForthInterp *interp, const char *msg)
         fprintf(stderr, "%s: ", msg);
 
     switch (interp->errid) {
+        /* errors about internal */
         case FORTH_ERR_INIT:
             fputs("failed to initialize interpreter struct...", stderr);
             break;
         case FORTH_ERR_SIG:
             fputs("error signal was received...exit", stderr);
             break;
-
+        case FORTH_ERR_TOO_FEW_ARGS:
+            fputs("word received too few arguments", stderr);
+            break;
+        case FORTH_ERR_NOT_IMPLEMENTED:
+            fputs("not implemented error", stderr);
+            break;
         case FORTH_ERR_ARGS:
             fputs("arguments error", stderr);
             break;
@@ -376,33 +382,31 @@ forth_perror(ForthInterp *interp, const char *msg)
         case FORTH_ERR_STACK_OVERFLOW:
             fputs("forth's stack overflow error", stderr);
             break;
-        case FORTH_ERR_BAD_TOKEN:
-            fputs("malformed token found", stderr);
+        case FORTH_ERR_ASSERT_FAILED:
+            fputs("sorry, my assertion failed...", stderr);
             break;
-        case FORTH_ERR_UNCLOSED_STR:
-            fputs("unclosed string found", stderr);
+
+        /* errors about type or parser */
+        case FORTH_ERR_BAD_DIGIT:
+            fputs("malformed digit found", stderr);
             break;
         case FORTH_ERR_BAD_STRING:
             fputs("malformed string found", stderr);
             break;
-        case FORTH_ERR_BAD_DIGIT:
-            fputs("malformed digit found", stderr);
-            break;
-        case FORTH_ERR_CONVERT_FAILED:
-            fputs("can't convert something to other types", stderr);
+        case FORTH_ERR_BAD_TOKEN:
+            fputs("malformed token found", stderr);
             break;
         case FORTH_ERR_NOT_FOUND_TOKEN:
             fputs("parser ended parsing but even any token had been not found", stderr);
             break;
-        case FORTH_ERR_TOO_FEW_ARGS:
-            fputs("word received too few arguments", stderr);
+        case FORTH_ERR_CONVERT_FAILED:
+            fputs("can't convert something to other types", stderr);
             break;
-        case FORTH_ERR_NOT_IMPLEMENTED:
-            fputs("not implemented error", stderr);
+        case FORTH_ERR_UNCLOSED_STR:
+            fputs("unclosed string found", stderr);
             break;
-
-        case FORTH_ERR_ASSERT_FAILED:
-            fputs("sorry, my assertion failed...", stderr);
+        case FORTH_ERR_UNEXPECTED_TYPE:
+            fputs("unexpected type word", stderr);
             break;
 
         default:

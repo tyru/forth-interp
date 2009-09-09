@@ -7,7 +7,7 @@ INCLUDES =
 CFLAGS   = -DNDEBUG=1 $(INCLUDES) -g -Wall -W -pedantic -std=gnu99    # debug build
 
 EXE      = myforth
-SRC      = main.c forth.c util.c stack.c parser.c word.c token.c digit.c signal.c
+SRC      = main.c forth.c util.c stack.c parser.c word.c word_def.c token.c digit.c signal.c
 OBJS     = $(SRC:.c=.o)
 
 OBJS_NOMAIN = `for i in $(OBJS); do echo $$i; done | grep -v 'main\.o'`

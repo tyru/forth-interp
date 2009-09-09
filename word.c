@@ -1,5 +1,5 @@
 /*
- * word.c - forth operator definitions
+ * word.c - ForthWord api
  *
  * Written By: tyru <tyru.exe@gmail.com>
  * Last Change: 2009-09-09.
@@ -8,16 +8,19 @@
 
 #include "word.h"
 
+#include "word_def.h"
+
 #include "forth.h"
 #include "util.h"
 #include "stack.h"
 
 #include <stdlib.h>
 #include <errno.h>
+#include <alloca.h>
 
 
 
-/* api */
+
 
 void
 word_init(ForthWord *word)
@@ -38,6 +41,24 @@ word_init(ForthWord *word)
 }
 
 
+// new word
+void
+word_init_with_word(ForthWord *dest, ForthWord *src)
+{
+    word_init(dest);
+
+    // digit
+    word_set_digit(dest, src->digitval.digit);
+    // str
+    word_set_str_copy(dest, src->strval.str);
+    // tok_str
+    word_set_tok_str_copy(dest, src->tok_str.str);
+
+    dest->type = src->type;
+}
+
+
+// new digit
 void
 word_init_with_digit(ForthWord *word, digit_t digit)
 {
@@ -47,6 +68,7 @@ word_init_with_digit(ForthWord *word, digit_t digit)
 }
 
 
+// new tok_str
 void
 word_init_with_tok_str(ForthWord *word, const char *tok_str)
 {
@@ -55,7 +77,7 @@ word_init_with_tok_str(ForthWord *word, const char *tok_str)
 }
 
 
-// NOT USED
+// new str
 void
 word_init_with_str(ForthWord *word, const char *str)
 {
@@ -73,6 +95,9 @@ word_destruct(ForthWord *word)
 }
 
 
+/* setter */
+
+// tok_str
 void
 word_set_tok_str(ForthWord *word, const char *str)
 {
@@ -85,18 +110,16 @@ word_set_tok_str(ForthWord *word, const char *str)
 }
 
 
+// tok_str copy
 void
 word_set_tok_str_copy(ForthWord *word, const char *str)
 {
+    if (str == NULL) return;
     size_t len = strlen(str);
 
     // TODO use realloc()
     word->tok_str.str = malloc(len + 1);
-    if (word->tok_str.str == NULL) {
-        FREE(word->tok_str.str);    // for safety
-        return;
-    }
-    if (errno == ENOMEM) {
+    if (! ALLOCATED(word->tok_str.str)) {
         FREE(word->tok_str.str);    // for safety
         return;
     }
@@ -108,7 +131,7 @@ word_set_tok_str_copy(ForthWord *word, const char *str)
 }
 
 
-// NOT USED
+// str
 void
 word_set_str(ForthWord *word, const char *str)
 {
@@ -120,18 +143,16 @@ word_set_str(ForthWord *word, const char *str)
 }
 
 
+// str copy
 void
 word_set_str_copy(ForthWord *word, const char *str)
 {
+    if (str == NULL) return;
     size_t len = strlen(str);
 
     // TODO use realloc()
     word->strval.str = malloc(len + 1);
-    if (word->strval.str == NULL) {
-        FREE(word->strval.str);    // for safety
-        return;
-    }
-    if (errno == ENOMEM) {
+    if (! ALLOCATED(word->strval.str)) {
         FREE(word->strval.str);    // for safety
         return;
     }
@@ -143,6 +164,7 @@ word_set_str_copy(ForthWord *word, const char *str)
 }
 
 
+// digit
 void
 word_set_digit(ForthWord *word, digit_t digit)
 {
@@ -151,14 +173,16 @@ word_set_digit(ForthWord *word, digit_t digit)
 }
 
 
+/* word api for ForthInterp, etc. */
 
-/* forth operator definitions */
-
+// called from forth_init().
 void
 forth_init_word(ForthInterp *interp)
 {
+    const int word_num = 5;
+
     interp->word_def = CAST(
-        ForthWord*, calloc(sizeof(ForthWord), 4)
+        ForthWord*, calloc(sizeof(ForthWord), word_num)
     );
     word_init(interp->word_def);
     interp->word_pos = 0;
@@ -168,7 +192,9 @@ forth_init_word(ForthInterp *interp)
     forth_regist_word(interp, "-", forth_word_minus);
     forth_regist_word(interp, "*", forth_word_multiply);
     forth_regist_word(interp, "/", forth_word_divide);
+    forth_regist_word(interp, ".", forth_word_print);
 }
+
 
 // NOTE: copy the address of tok_str.
 void
@@ -183,9 +209,12 @@ forth_regist_word(ForthInterp *interp, const char *tok_str, word_func_t func)
 }
 
 
+/* type conversion */
+
 char*
-forth_word_as_str(ForthInterp *interp, ForthWord *word)
+forth_word_as_tok_str(ForthInterp *interp, ForthWord *word)
 {
+    // TODO
     if (word->tok_str.str == NULL) {
         forth_uneval_word(interp, word);
     }
@@ -276,6 +305,8 @@ forth_eval_word(ForthInterp *interp, ForthWord *word)
 }
 
 
+// evaluate each member and set result to word->tok_str.
+// NOTE: word->type and its value must be set.
 void
 forth_uneval_word(ForthInterp *interp, ForthWord *word)
 {
@@ -314,6 +345,7 @@ forth_uneval_word(ForthInterp *interp, ForthWord *word)
 }
 
 
+// identify token.
 word_type
 forth_get_word_type(ForthInterp *interp, const char *token)
 {
@@ -328,12 +360,12 @@ forth_get_word_type(ForthInterp *interp, const char *token)
 }
 
 
+// get the word defition.
 ForthWord*
 forth_get_word_def(ForthInterp *interp, const char *token)
 {
     // TODO bsearch() sorted array.
     for (size_t i = 0; i < interp->word_pos; i++) {
-        // XXX interp->word_def[i].token.str can't be NULL?
         if (STREQ(token, interp->word_def[i].tok_str.str))
             return interp->word_def + i;
     }
@@ -341,83 +373,116 @@ forth_get_word_def(ForthInterp *interp, const char *token)
 }
 
 
-/* word functions */
+/* utility functions for word functions */
 
 void
-forth_word_plus(ForthInterp *interp)
+forth_pop_word(ForthInterp *interp, ForthWord *word)
 {
-    digit_t args[2];
-    ForthWord word;
+    ForthWord *top = AC_TOP_WORD(interp);
 
+    // copy to word
+    word_init_with_word(word, top);
+
+    if (top->tok_str.str != NULL) {
+        forth_debugf(interp, "pop![%s]\n", top->tok_str.str);
+    } else {
+        forth_debug(interp, "pop!\n");
+    }
     // pop
-    POP_CONV_SOME(interp, args, 2, DIGIT);
-
-    // this is most important thing!
-    digit_t result = args[0] + args[1];
-
-    // push
-    word_init_with_digit(&word, result);
-    stack_push(interp->word_stack, &word);
-
-    interp->errid = FORTH_ERR_NOERR;
+    word_destruct(top);
+    stack_pop(interp->word_stack);
 }
 
 
+// - convert tok_str to digit.
+// - check the top word's type.
 void
-forth_word_minus(ForthInterp *interp)
+forth_pop_str(ForthInterp *interp, char *str)
 {
-    digit_t args[2];
-    ForthWord word;
+    if (str == NULL)
+        forth_die(interp, "forth_pop_digit", FORTH_ERR_ARGS);
 
-    // pop
-    POP_CONV_SOME(interp, args, 2, DIGIT);
+    ForthWord *top = AC_TOP_WORD(interp);
 
-    // this is most important thing!
-    digit_t result = args[0] - args[1];
+    // die if not string.
+    if (top->type != WORD_STRING) {
+        forth_die(interp, "forth_pop_str", FORTH_ERR_UNEXPECTED_TYPE);
+    }
+    if (top->strval.str == NULL) {
+        if (top->tok_str.str == NULL) {
+            forth_uneval_word(interp, top);
+        }
+        forth_eval_word(interp, top);
+    }
 
-    // push
-    word_init_with_digit(&word, result);
-    stack_push(interp->word_stack, &word);
-
-    interp->errid = FORTH_ERR_NOERR;
+    forth_pop_str_fast(interp, str);
 }
 
 
+// faster than forth_pop_word(). do not check the top word's type.
+// NOTE: strval must be set.
 void
-forth_word_multiply(ForthInterp *interp)
+forth_pop_str_fast(ForthInterp *interp, char *str)
 {
-    digit_t args[2];
-    ForthWord word;
+    ForthWord *top = AC_TOP_WORD(interp);
 
+    // assign
+    strncpy(str, top->strval.str, strlen(top->strval.str) + 1);
+
+    if (top->tok_str.str != NULL) {
+        forth_debugf(interp, "pop![%s]\n", top->tok_str.str);
+    } else {
+        forth_debug(interp, "pop!\n");
+    }
     // pop
-    POP_CONV_SOME(interp, args, 2, DIGIT);
-
-    // this is most important thing!
-    digit_t result = args[0] * args[1];
-
-    // push
-    word_init_with_digit(&word, result);
-    stack_push(interp->word_stack, &word);
-
-    interp->errid = FORTH_ERR_NOERR;
+    word_destruct(top);
+    stack_pop(interp->word_stack);
 }
 
 
+// - convert tok_str to digit.
+// - check the top word's type.
 void
-forth_word_divide(ForthInterp *interp)
+forth_pop_digit(ForthInterp *interp, digit_t *digit)
 {
-    digit_t args[2];
-    ForthWord word;
+    if (digit == NULL)
+        forth_die(interp, "forth_pop_digit", FORTH_ERR_ARGS);
 
-    // pop
-    POP_CONV_SOME(interp, args, 2, DIGIT);
+    ForthWord *top = AC_TOP_WORD(interp);
 
-    // this is most important thing!
-    digit_t result = args[0] / args[1];
+    // die if not digit.
+    if (top->type != WORD_DIGIT) {
+        forth_die(interp, "forth_pop_digit", FORTH_ERR_UNEXPECTED_TYPE);
+    }
+    // convert if digit is not set.
+    if (! top->digitval.is_set) {
+        if (top->tok_str.str == NULL) {
+            forth_uneval_word(interp, top);
+        }
+        forth_eval_word(interp, top);
+    }
 
-    // push
-    word_init_with_digit(&word, result);
-    stack_push(interp->word_stack, &word);
-
-    interp->errid = FORTH_ERR_NOERR;
+    forth_pop_digit_fast(interp, digit);
 }
+
+
+// faster than forth_pop_word(). do not check the top word's type.
+// NOTE: digitval must be set.
+void
+forth_pop_digit_fast(ForthInterp *interp, digit_t *digit)
+{
+    ForthWord *top = AC_TOP_WORD(interp);
+
+    // assign
+    *digit = top->digitval.digit;
+
+    if (top->tok_str.str != NULL) {
+        forth_debugf(interp, "pop![%s]\n", top->tok_str.str);
+    } else {
+        forth_debug(interp, "pop!\n");
+    }
+    // pop
+    word_destruct(top);
+    stack_pop(interp->word_stack);
+}
+
