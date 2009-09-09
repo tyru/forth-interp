@@ -43,11 +43,11 @@ struct ForthWord {
         bool is_set;
     } digitval;
     // parsed string.
-    struct word_tok_str_t {
+    struct word_tokstr_t {
         char *str;
         int capacity;
         int len;
-    } tok_str;
+    } tokstr;
 
     word_func_t     func;
     word_type       type;
@@ -66,7 +66,7 @@ void
 word_init_with_digit(ForthWord *word, digit_t digit);
 
 void
-word_init_with_tok_str(ForthWord *word, const char *tok_str);
+word_init_with_tokstr(ForthWord *word, const char *tokstr);
 
 void
 word_init_with_str(ForthWord *word, const char *str);
@@ -75,10 +75,10 @@ void
 word_destruct(ForthWord *word);
 
 void
-word_set_tok_str(ForthWord *word, const char *str);
+word_set_tokstr(ForthWord *word, const char *str);
 
 void
-word_set_tok_str_copy(ForthWord *word, const char *str);
+word_set_tokstr_copy(ForthWord *word, const char *str);
 
 void
 word_set_str(ForthWord *word, const char *str);
@@ -95,15 +95,15 @@ word_set_digit(ForthWord *word, digit_t digit);
 void
 forth_init_word(ForthInterp *interp);
 
-// NOTE: copy the address of tok_str.
+// NOTE: copy the address of tokstr.
 void
-forth_regist_word(ForthInterp *interp, const char *tok_str, word_func_t func);
+forth_regist_word(ForthInterp *interp, const char *tokstr, word_func_t func);
 
 char*
-forth_word_as_tok_str(ForthInterp *interp, ForthWord *word);
+forth_word_as_tokstr(ForthInterp *interp, ForthWord *word);
 
-// evaluate word->tok_str.
-// NOTE: word->type and word->tok_str must be set.
+// evaluate word->tokstr.
+// NOTE: word->type and word->tokstr must be set.
 void
 forth_eval_word(ForthInterp *interp, ForthWord *word);
 

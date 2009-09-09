@@ -193,7 +193,7 @@ forth_clear_stack(ForthInterp *interp)
 {
     while (AC_TOP_WORD(interp) != NULL) {
         // forth_uneval_word(interp, AC_TOP_WORD(interp))
-        forth_debugf(interp, "pop![%s]\n", AC_TOP_WORD(interp)->tok_str.str);
+        forth_debugf(interp, "pop![%s]\n", AC_TOP_WORD(interp)->tokstr.str);
         forth_pop_word(interp, NULL);
     }
 }
@@ -222,14 +222,14 @@ forth_run_src(ForthInterp *interp)
             case WORD_UNDEF:
                 fprintf(stderr,
                         "%s: unknown token\n",
-                        word->tok_str.str);
+                        word->tokstr.str);
                 interp->errid = FORTH_ERR_BAD_TOKEN;
                 return false;
 
             case WORD_FUNC:
                 ASSERT(interp, word->func != WORD_NULL_FUNC);
                 func = word->func;
-                forth_debugf(interp, "dispatch![%s]\n", word->tok_str.str);
+                forth_debugf(interp, "dispatch![%s]\n", word->tokstr.str);
 
                 // pop the func word
                 forth_pop_word(interp, NULL);
@@ -251,58 +251,10 @@ forth_run_src(ForthInterp *interp)
 
     if (AC_TOP_WORD(interp) != NULL && interp->debug) {
         forth_debugf(interp, "top stack was [%s]\n",
-                forth_word_as_tok_str(interp, AC_TOP_WORD(interp)));
+                forth_word_as_tokstr(interp, AC_TOP_WORD(interp)));
     }
 
     return true;
-}
-
-
-void
-forth_run_src_each_line(ForthInterp *interp)
-{
-    int i;
-    char **lines;
-
-
-    // allocate char** pointers.
-    size_t line_num = strcount(interp->src, '\n') + 1;
-    lines = alloca(line_num * sizeof(char*));
-
-    // split each line into lines.
-    char *begin = interp->src;
-    char *end;
-    i = 0;
-    while ((end = strchr(begin, '\n')) != NULL) {
-        lines[i] = alloca(end - begin + 1);
-        strncpy(lines[i], begin, end - begin);
-        lines[i][end - begin] = '\0';
-        // NOTE: assume newline is one byte.
-        begin = end + 1;
-        i++;
-    }
-    // NOTE: lines[i] may be allocated pointer.
-    // alloca() frees its pointer at the end of func, though.
-    lines[i] = NULL;
-
-    ASSERT(interp, CAST(size_t, i + 1) == line_num);
-
-
-    // process each line.
-    for (i = 0; lines[i] != NULL; i++) {
-        // set source which doesn't contain newline.
-        size_t len = strlen(lines[i]);
-        strncpy(interp->src, lines[i], len + 1);
-        forth_debugf(interp, "[%s] - eval begin.\n", interp->src);
-
-        // get words as possible.
-        forth_run_src(interp);
-
-        forth_debugf(interp, "[%s] - eval end.\n", interp->src);
-
-        // pop all stacks.
-        forth_clear_stack(interp);
-    }
 }
 
 

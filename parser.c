@@ -20,7 +20,7 @@
 
 
 // NOTE:
-// - max_size <= capacity of token->tok_str
+// - max_size <= capacity of token->tokstr
 // - this free() token if not NULL.
 // XXX
 // check null byte.

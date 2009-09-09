@@ -103,9 +103,6 @@ forth_clear_stack(ForthInterp *interp);
 bool
 forth_run_src(ForthInterp *interp);
 
-void
-forth_run_src_each_line(ForthInterp *interp);
-
 void*
 forth_malloc(ForthInterp *interp, size_t size);
 

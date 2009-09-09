@@ -87,8 +87,8 @@ forth_token2word(ForthInterp *interp, const char *token, ForthWord *word)
     word->type = forth_get_word_type(interp, token);
     forth_debugf(interp, "word type: %d\n", word->type);
 
-    // copy parsed string to tok_str.
-    word_set_tok_str_copy(word, token);
+    // copy parsed string to tokstr.
+    word_set_tokstr_copy(word, token);
 
     // find token's func.
     if (word->type == WORD_FUNC) {

@@ -28,9 +28,9 @@ word_init(ForthWord *word)
     word->type = WORD_UNDEF;
     word->func  = WORD_NULL_FUNC;
 
-    word->tok_str.str      = NULL;
-    word->tok_str.capacity = -1;
-    word->tok_str.len      = -1;
+    word->tokstr.str      = NULL;
+    word->tokstr.capacity = -1;
+    word->tokstr.len      = -1;
 
     word->strval.str      = NULL;
     word->strval.capacity = -1;
@@ -51,8 +51,8 @@ word_init_with_word(ForthWord *dest, ForthWord *src)
     word_set_digit(dest, src->digitval.digit);
     // str
     word_set_str_copy(dest, src->strval.str);
-    // tok_str
-    word_set_tok_str_copy(dest, src->tok_str.str);
+    // tokstr
+    word_set_tokstr_copy(dest, src->tokstr.str);
 
     dest->type = src->type;
 }
@@ -68,12 +68,12 @@ word_init_with_digit(ForthWord *word, digit_t digit)
 }
 
 
-// new tok_str
+// new tokstr
 void
-word_init_with_tok_str(ForthWord *word, const char *tok_str)
+word_init_with_tokstr(ForthWord *word, const char *tokstr)
 {
     word_init(word);
-    word_set_tok_str_copy(word, tok_str);
+    word_set_tokstr_copy(word, tokstr);
 }
 
 
@@ -90,44 +90,44 @@ word_init_with_str(ForthWord *word, const char *str)
 void
 word_destruct(ForthWord *word)
 {
-    FREE(word->tok_str.str);
+    FREE(word->tokstr.str);
     FREE(word->strval.str);
 }
 
 
 /* setter */
 
-// tok_str
+// tokstr
 void
-word_set_tok_str(ForthWord *word, const char *str)
+word_set_tokstr(ForthWord *word, const char *str)
 {
     size_t len = strlen(str);
 
-    word->tok_str.str = CAST(char*, str);
+    word->tokstr.str = CAST(char*, str);
 
-    word->tok_str.capacity = -1;    // not allocated!
-    word->tok_str.len = len;
+    word->tokstr.capacity = -1;    // not allocated!
+    word->tokstr.len = len;
 }
 
 
-// tok_str copy
+// tokstr copy
 void
-word_set_tok_str_copy(ForthWord *word, const char *str)
+word_set_tokstr_copy(ForthWord *word, const char *str)
 {
     if (str == NULL) return;
     size_t len = strlen(str);
 
     // TODO use realloc()
-    word->tok_str.str = malloc(len + 1);
-    if (! ALLOCATED(word->tok_str.str)) {
-        FREE(word->tok_str.str);    // for safety
+    word->tokstr.str = malloc(len + 1);
+    if (! ALLOCATED(word->tokstr.str)) {
+        FREE(word->tokstr.str);    // for safety
         return;
     }
 
-    strcpy(word->tok_str.str, str);
+    strcpy(word->tokstr.str, str);
 
-    word->tok_str.capacity = len + 1;
-    word->tok_str.len = len;
+    word->tokstr.capacity = len + 1;
+    word->tokstr.len = len;
 }
 
 
@@ -196,12 +196,12 @@ forth_init_word(ForthInterp *interp)
 }
 
 
-// NOTE: copy the address of tok_str.
+// NOTE: copy the address of tokstr.
 void
-forth_regist_word(ForthInterp *interp, const char *tok_str, word_func_t func)
+forth_regist_word(ForthInterp *interp, const char *tokstr, word_func_t func)
 {
-    // NOTE: copy the address of tok_str.
-    word_set_tok_str(interp->word_def + interp->word_pos, tok_str);
+    // NOTE: copy the address of tokstr.
+    word_set_tokstr(interp->word_def + interp->word_pos, tokstr);
     interp->word_def[interp->word_pos].func = func;
     interp->word_def[interp->word_pos].type = WORD_FUNC;
 
@@ -212,53 +212,53 @@ forth_regist_word(ForthInterp *interp, const char *tok_str, word_func_t func)
 /* type conversion */
 
 char*
-forth_word_as_tok_str(ForthInterp *interp, ForthWord *word)
+forth_word_as_tokstr(ForthInterp *interp, ForthWord *word)
 {
     // TODO
-    if (word->tok_str.str == NULL) {
+    if (word->tokstr.str == NULL) {
         forth_uneval_word(interp, word);
     }
-    return word->tok_str.str;
+    return word->tokstr.str;
 }
 
 
-// evaluate word->tok_str.
-// NOTE: word->type and word->tok_str must be set.
+// evaluate word->tokstr.
+// NOTE: word->type and word->tokstr must be set.
 void
 forth_eval_word(ForthInterp *interp, ForthWord *word)
 {
-    if (word->tok_str.str == NULL) return;
+    if (word->tokstr.str == NULL) return;
 
     if (word->type == WORD_DIGIT) {
         if (! word->digitval.is_set) {
-            ASSERT(interp, word->tok_str.str != NULL);
+            ASSERT(interp, word->tokstr.str != NULL);
             char *err = NULL;
 
-            digit_t d = atod(word->tok_str.str, 10, &err);
+            digit_t d = atod(word->tokstr.str, 10, &err);
             if (err != NULL) {
-                fprintf(stderr, "%s: ", word->tok_str.str);
+                fprintf(stderr, "%s: ", word->tokstr.str);
                 forth_die(interp, "atod", FORTH_ERR_CONVERT_FAILED);
             }
 
             word_set_digit(word, d);
-            forth_debugf(interp, "eval: %s -> %f\n", word->tok_str.str, word->digitval.digit);
+            forth_debugf(interp, "eval: %s -> %f\n", word->tokstr.str, word->digitval.digit);
         }
     }
     else if (word->type == WORD_STRING) {
         if (word->strval.str == NULL) {
-            size_t len = strlen(word->tok_str.str);
+            size_t len = strlen(word->tokstr.str);
             char str[len + 1];    // evaluated string.
 
             // empty string.
-            if (STREQ(word->tok_str.str, "\"\"")) {
+            if (STREQ(word->tokstr.str, "\"\"")) {
                 word_set_str(word, "");
                 return;
             }
 
             char *begin, *end, *cur_srch_pos;
             // set inside double quotes
-            cur_srch_pos = begin = word->tok_str.str + 1;
-            end = word->tok_str.str + word->tok_str.len - 2;    // remember null byte.
+            cur_srch_pos = begin = word->tokstr.str + 1;
+            end = word->tokstr.str + word->tokstr.len - 2;    // remember null byte.
 
             // original code from parser.c
             while (1) {
@@ -305,14 +305,14 @@ forth_eval_word(ForthInterp *interp, ForthWord *word)
 }
 
 
-// evaluate each member and set result to word->tok_str.
+// evaluate each member and set result to word->tokstr.
 // NOTE: word->type and its value must be set.
 void
 forth_uneval_word(ForthInterp *interp, ForthWord *word)
 {
     char tmp[interp->max_word_len];    // c99
 
-    if (word->tok_str.str != NULL) return;
+    if (word->tokstr.str != NULL) return;
 
 
     if (word->type == WORD_DIGIT) {
@@ -321,7 +321,7 @@ forth_uneval_word(ForthInterp *interp, ForthWord *word)
         if (! dtoa(word->digitval.digit, tmp, interp->max_word_len, 10))
             forth_die(interp, "dtoa", FORTH_ERR_CONVERT_FAILED);
 
-        word_set_tok_str_copy(word, tmp);
+        word_set_tokstr_copy(word, tmp);
     }
     else if (word->type == WORD_STRING) {
         // TODO
@@ -366,7 +366,7 @@ forth_get_word_def(ForthInterp *interp, const char *token)
 {
     // TODO bsearch() sorted array.
     for (size_t i = 0; i < interp->word_pos; i++) {
-        if (STREQ(token, interp->word_def[i].tok_str.str))
+        if (STREQ(token, interp->word_def[i].tokstr.str))
             return interp->word_def + i;
     }
     return NULL;
@@ -389,8 +389,8 @@ forth_pop_word(ForthInterp *interp, ForthWord *word)
         word_init_with_word(word, top);
     }
 
-    if (top->tok_str.str != NULL) {
-        forth_debugf(interp, "pop![%s]\n", top->tok_str.str);
+    if (top->tokstr.str != NULL) {
+        forth_debugf(interp, "pop![%s]\n", top->tokstr.str);
     } else {
         forth_debug(interp, "pop!\n");
     }
@@ -401,7 +401,7 @@ forth_pop_word(ForthInterp *interp, ForthWord *word)
 }
 
 
-// - convert tok_str to digit.
+// - convert tokstr to digit.
 // - check the top word's type.
 bool
 forth_pop_str(ForthInterp *interp, char *str)
@@ -418,7 +418,7 @@ forth_pop_str(ForthInterp *interp, char *str)
         return false;
     }
     if (top->strval.str == NULL) {
-        if (top->tok_str.str == NULL) {
+        if (top->tokstr.str == NULL) {
             forth_uneval_word(interp, top);
         }
         forth_eval_word(interp, top);
@@ -440,8 +440,8 @@ forth_pop_str_fast(ForthInterp *interp, char *str)
     // assign
     strncpy(str, top->strval.str, strlen(top->strval.str) + 1);
 
-    if (top->tok_str.str != NULL) {
-        forth_debugf(interp, "pop![%s]\n", top->tok_str.str);
+    if (top->tokstr.str != NULL) {
+        forth_debugf(interp, "pop![%s]\n", top->tokstr.str);
     } else {
         forth_debug(interp, "pop!\n");
     }
@@ -452,7 +452,7 @@ forth_pop_str_fast(ForthInterp *interp, char *str)
 }
 
 
-// - convert tok_str to digit.
+// - convert tokstr to digit.
 // - check the top word's type.
 bool
 forth_pop_digit(ForthInterp *interp, digit_t *digit)
@@ -470,7 +470,7 @@ forth_pop_digit(ForthInterp *interp, digit_t *digit)
     }
     // convert if digit is not set.
     if (! top->digitval.is_set) {
-        if (top->tok_str.str == NULL) {
+        if (top->tokstr.str == NULL) {
             forth_uneval_word(interp, top);
         }
         forth_eval_word(interp, top);
@@ -492,8 +492,8 @@ forth_pop_digit_fast(ForthInterp *interp, digit_t *digit)
     // assign
     *digit = top->digitval.digit;
 
-    if (top->tok_str.str != NULL) {
-        forth_debugf(interp, "pop![%s]\n", top->tok_str.str);
+    if (top->tokstr.str != NULL) {
+        forth_debugf(interp, "pop![%s]\n", top->tokstr.str);
     } else {
         forth_debug(interp, "pop!\n");
     }
